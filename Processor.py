@@ -16,16 +16,15 @@ class SDVProcessor:
        pass
     
 class DataSynthesizerProcessor:
-    description_file = os.path.join(os.getcwd(), 'workingfolder', 'description.json')
+    description_file = os.path.join(os.getcwd(), 'description.json')
     
-    def __init__(self, data, param_dict):
+    def __init__(self, data_path, param_dict):
         params_required = ["categorical_attributes", 
                            "epsilon", 
-                           "degree_of_bayesian_network", 
-                           "num_tuples_to_generate"]
-        self.data = data
+                           "degree_of_bayesian_network"]
+        self.data = data_path
         
-        for param in param_dict.keys:
+        for param in param_dict.keys():
             if param not in params_required:
                 raise ValueError("Unspecified Parameter, Please follow the correct naming convention")
             
@@ -37,4 +36,6 @@ class DataSynthesizerProcessor:
                                                                 epsilon = self.param_dict["epsilon"], 
                                                                 k= self.param_dict["degree_of_bayesian_network"],
                                                                 attribute_to_is_categorical = self.param_dict["categorical_attributes"])
+        print("Saving Dataset Description File")
         describer.save_dataset_description_to_file(self.description_file)
+        return self.description_file

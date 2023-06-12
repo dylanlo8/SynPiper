@@ -47,6 +47,6 @@ class SynPiper:
         generator.generate_dataset_in_correlated_attribute_mode(num_tuples_to_generate, description_file)
         
         # Saves the generated synthetic data to designated filepath
-        generator.save_synthetic_data(self.synthetic_filepath) # Saves the Synthetic Data csv file to the designated filepath
+        generator.save_synthetic_data(self.synthetic_filepath)
     
     
