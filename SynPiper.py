@@ -4,7 +4,7 @@ import os
 
 class SynPiper:
     # Saves the generated synthetic data into current path
-    synthetic_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '/synthetic.csv')
+    synthetic_filepath = os.path.join(os.getcwd(), 'synthetic.csv')
     
     #synthesizer_name : name of synthesizer 
     #data : input data to train synthetic data generator
