@@ -2,9 +2,9 @@ import os
 from DataSynthesizer.DataDescriber import DataDescriber
 
 class SDVProcessor:
-    def __init__(self, data, param_dict):
+    def __init__(self, data_path, param_dict):
         params_required = []
-        self.data = data
+        self.data_path = data_path
         
         for param in param_dict.keys():
             if param not in params_required:
