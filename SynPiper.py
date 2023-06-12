@@ -3,7 +3,8 @@ from DataSynthesizer.DataGenerator import DataGenerator
 import os
 
 class SynPiper:
-    synthetic_filepath = os.getcwd + '/synthetic.csv'
+    # Saves the generated synthetic data into current path
+    synthetic_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '/synthetic.csv')
     
     #synthesizer_name : name of synthesizer 
     #data : input data to train synthetic data generator

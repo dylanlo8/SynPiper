@@ -16,10 +16,13 @@ class SDVProcessor:
        pass
     
 class DataSynthesizerProcessor:
-    description_file = os.getcwd() + '/workingfolder/description.json'
+    description_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), '/workingfolder/description.json')
     
     def __init__(self, data, param_dict):
-        params_required = ["categorical_attributes", "epsilon", "degree_of_bayesian_network", "num_tuples_to_generate"]
+        params_required = ["categorical_attributes", 
+                           "epsilon", 
+                           "degree_of_bayesian_network", 
+                           "num_tuples_to_generate"]
         self.data = data
         
         for param in param_dict.keys:
