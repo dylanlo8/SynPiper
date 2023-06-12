@@ -3,6 +3,10 @@ import pandas as pd
 import seaborn as sns
 from sklearn.metrics import normalized_mutual_info_score
 
+from sdv.evaluation.single_table import get_column_plot
+from sdv.metadata import SingleTableMetadata
+from sdmetrics.single_column import KSComplement
+from sdmetrics.single_column import TVComplement
 
 # Getting all the KS-Statistic Scores (works only for numerical columns)
 def get_all_ks_scores(real_table, synthetic_table, numerical_columns):
@@ -20,7 +24,7 @@ def get_all_ks_scores(real_table, synthetic_table, numerical_columns):
   plt.figure(figsize = (15,6))
   plots = plt.bar(numerical_columns, results)
   plt.title("Kolmogorov-Smirnov statistic Scores")
-  print(pd.Series(series_results))
+  # print(pd.Series(series_results))
 
 #get_all_ks_scores(df, synthetic_data, numerical_columns)
 
@@ -41,7 +45,7 @@ def get_all_variational_differences(real_table, synthetic_table, categorical_col
   plt.figure(figsize = (15,6))
   plots = plt.bar(categorical_columns, results)
   plt.title("Total Variational Difference Scores")
-  print(pd.Series(series_results))
+  # print(pd.Series(series_results))
 
 def plot_corr_matrix(real, synthetic):
     fig, (ax1, ax2) = plt.subplots(figsize=(15,6), ncols=2)
@@ -51,7 +55,7 @@ def plot_corr_matrix(real, synthetic):
     sns.heatmap(synthetic.corr(), ax = ax2)
     ax2.title.set_text("Synthetic Data Correlation Matrix")
 
-
+# Plots a Pairwise Mutual Information Matrix
 def plot_mi_matrix(df, df_syn):
     matMI = pd.DataFrame(index = df.columns, columns = df.columns, dtype=float)
     matMI_syn = pd.DataFrame(index = df.columns, columns = df.columns, dtype=float)
