@@ -13,13 +13,24 @@ from sdv.metadata import SingleTableMetadata
 from sdmetrics.single_column import KSComplement
 from sdmetrics.single_column import TVComplement
 
-def sdv_metadata_processing(real_data):
-    metadata = {
-    "primary_key": "user_id",
-    "columns": {}   
-    }
 
+def sdv_metadata_processing(real_data, categorical_threshold=10):
+    """Metadata Processing for sdv_metrics library
+    Processes input data into numerical or categorical data based on the
+    threshold of the number of unique values in the column.
 
+    real_data : Input Dataframe
+    categorical_threshold : Threshold (Integer)
+    """
+
+    metadata = {"columns": {}
+                }  # Dictionary of Column Names to Datatype
+
+    for col in real_data.columns:
+        if len(real_data[col].unique()) <= categorical_threshold:
+            metadata["columns"][col] = "categorical"
+        else:
+            metadata["columns"][col] = "numerical"
 
     return metadata
 
@@ -51,12 +62,14 @@ Args:
   synthetic: Synthetic Data (in the same format as Real Data)
 """
 
+
 def plot_all_real_synthetic(real, synthetic):
-    fig = plotly.subplots.make_subplots(rows = len(real.columns), cols = 1)
+    fig = plotly.subplots.make_subplots(rows=len(real.columns), cols=1)
 
     for col in real.columns:
         fig.add_trace(plot_real_synthetic(real, synthetic, col))
     return fig
+
 
 def get_all_ks_scores(real_table, synthetic_table, numerical_columns):
     """Compute the KS-Statistic Scores numerical columns.
