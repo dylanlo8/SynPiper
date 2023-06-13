@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import pandas as pd
 from run import *
-
+#streamlit run c:/Users/User/Desktop/SynPiper/about.py
 st.title("Create a New Synthesizer")
 
 st.subheader("File Upload")
@@ -70,28 +70,25 @@ try:
     # MARK: Implement other synthesizers here
     else:
         pass
-
+    
     if ready_to_train:
         st.subheader("Training of Synthesizer")
 
         # Number of Rows input and Train Button
         st.caption("Number of Rows to Generate")
         col1, col2 = st.columns(2)
-        n_rows_input = col1.number_input(
-            label="nrows", min_value=1, max_value=100000, label_visibility="collapsed"
-        )
-
-        if synthesizer_name == "dpsynthesizer":
-            col2.button(
-                label="Train",
-                on_click=run_dpsyn(
-                    params_required,
-                    num_tuples_to_generate=n_rows_input,
-                    data_path=path_of_df_real,
-                ),
+        with col1:
+            n_rows_input = st.number_input(
+                label="nrows", min_value=1, max_value=100000, label_visibility="collapsed"
             )
 
+        with col2:
+            if synthesizer_name == "dpsynthesizer":
+                st.button(label="Train")
 
+
+    
+        
 except:
     st.text("Please upload a datafile to proceed")
 
