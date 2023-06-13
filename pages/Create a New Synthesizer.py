@@ -17,11 +17,12 @@ try:
     os.makedirs(
         workingpath, exist_ok=True
     )  # create a workingpath directory, if not already existed
+    
     path_of_df_real = os.path.join(workingpath, "df_real.csv")
     uploaded_data.to_csv(path_or_buf=path_of_df_real)
 
+    # Columns
     avail_cols = uploaded_data.columns
-
     cat_cols = st.multiselect(label="Pick categorical", options=avail_cols)
     num_cols = st.multiselect(
         label="Pick numerical",
@@ -77,14 +78,20 @@ try:
         # Number of Rows input and Train Button
         st.caption("Number of Rows to Generate")
         col1, col2 = st.columns(2)
-        with col1:
+        with col1: # Nrow Input
             n_rows_input = st.number_input(
                 label="nrows", min_value=1, max_value=100000, label_visibility="collapsed"
             )
 
-        with col2:
+        with col2: # Train Button
             if synthesizer_name == "dpsynthesizer":
-                st.button(label="Train")
+                if st.button(label="Train"): #on click
+                    run_dpsyn(params_required, 
+                              num_tuples_to_generate = n_rows_input, 
+                              data_path = path_of_df_real)
+
+                
+
 
 
     
