@@ -5,12 +5,23 @@ import seaborn as sns
 from sklearn.metrics import normalized_mutual_info_score
 import plotly.express as px
 import plotly.figure_factory as ff
+import plotly.subplots
 
 # SDV Metrics Libraries
 from sdv.evaluation.single_table import get_column_plot
 from sdv.metadata import SingleTableMetadata
 from sdmetrics.single_column import KSComplement
 from sdmetrics.single_column import TVComplement
+
+def sdv_metadata_processing(real_data):
+    metadata = {
+    "primary_key": "user_id",
+    "columns": {}   
+    }
+
+
+
+    return metadata
 
 
 def plot_real_synthetic(real, synthetic, colname):
@@ -24,12 +35,14 @@ def plot_real_synthetic(real, synthetic, colname):
 
     # Synthetic Data Vault Processing for get_column_plot function
     metadata = SingleTableMetadata()
+
     metadata.detect_from_dataframe(data=real)
 
     fig = get_column_plot(
         real_data=real, synthetic_data=synthetic, column_name=colname, metadata=metadata
     )
-    fig.show()
+
+    return fig
 
 
 """ Plots all Distributions using the plot_real_synthetic function.
@@ -39,9 +52,11 @@ Args:
 """
 
 def plot_all_real_synthetic(real, synthetic):
-    for col in real.columns:
-        plot_real_synthetic(real, synthetic, col)
+    fig = plotly.subplots.make_subplots(rows = len(real.columns), cols = 1)
 
+    for col in real.columns:
+        fig.add_trace(plot_real_synthetic(real, synthetic, col))
+    return fig
 
 def get_all_ks_scores(real_table, synthetic_table, numerical_columns):
     """Compute the KS-Statistic Scores numerical columns.

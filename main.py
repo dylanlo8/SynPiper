@@ -40,7 +40,7 @@ if __name__ == "__main__":
             "thal": True,
             "target": True,
         },
-        "epsilon": 0.3,
+        "epsilon": 5,
         "degree_of_bayesian_network": 3,
     }
 
@@ -55,9 +55,6 @@ if __name__ == "__main__":
 
     # Running of Streamlit App
     st.title("Synthetic Data Quality Report")
-
-    # List of Plots
-    st.subheader("Distribution Plots")
 
     st.subheader("Total Variational Difference (TVD) Analysis")
     df_tvd, plot = get_all_variational_differences(df_real, df_syn, categorical_data)
@@ -88,3 +85,9 @@ if __name__ == "__main__":
 
     st.subheader("Pairwise Mutual Information Score Comparison")
     st.pyplot(plot_mi_matrix(df_real, df_syn))
+
+    # List of Plots
+    st.subheader("Column Specific Distribution Comparison")
+    for col in df_real.columns:
+        st.subheader(f"{col} Distribution")
+        st.plotly_chart(plot_real_synthetic(df_real, df_syn, col))
