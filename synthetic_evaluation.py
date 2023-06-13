@@ -1,4 +1,5 @@
 # General
+import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -7,6 +8,7 @@ import plotly.express as px
 import plotly.figure_factory as ff
 import plotly.subplots
 import json
+from pandas.api.types import is_numeric_dtype
 
 # SDV Metrics Libraries
 from sdv.evaluation.single_table import get_column_plot
@@ -29,7 +31,7 @@ def sdv_metadata_processing(real_data, categorical_threshold=10):
     metadata = SingleTableMetadata()
 
     for col in real_data.columns:
-        if len(real_data[col].unique()) <= categorical_threshold:
+        if (len(real_data[col].unique()) <= categorical_threshold) or not (is_numeric_dtype(real_data[col])):
             metadata.add_column(column_name=col, sdtype="categorical")
         else:
             metadata.add_column(column_name=col, sdtype="numerical")
@@ -107,7 +109,7 @@ def get_all_variational_differences(real_table, synthetic_table, categorical_col
 
     Args:
         real_table: Pandas DataFrame of Real Data
-        synthetic_table: Pandas DataFrame of Synthetic Data 
+        synthetic_table: Pandas DataFrame of Synthetic Data
             (in the same format as Real Data)
         categorical_columns: A List of categorical columns names.
 
@@ -146,9 +148,9 @@ def plot_corr_matrix(real, synthetic):
     Args:
         real: Real Data
         synthetic: Synthetic Data (in the same format as Real Data)
-    
+
     Returns:
-        fig: A (1,2) subplot containing the pairwise correlation matrix 
+        fig: A (1,2) subplot containing the pairwise correlation matrix
         of both real and synthetic data for comparison.
     """
     fig, (ax1, ax2) = plt.subplots(figsize=(15, 6), ncols=2)
@@ -172,12 +174,12 @@ def plot_mi_matrix(df, df_syn):
     Args:
         df: Real Data
         df_syn: Synthetic Data (in the same format as Real Data)
-    
+
     Returns:
-        fig: A (1,2) subplot containing the pairwise mutual information matrix 
+        fig: A (1,2) subplot containing the pairwise mutual information matrix
         of both real and synthetic data for comparison.
     """
-    
+
     matMI = pd.DataFrame(index=df.columns, columns=df.columns, dtype=float)
     matMI_syn = pd.DataFrame(index=df.columns, columns=df.columns, dtype=float)
 
@@ -199,7 +201,9 @@ def plot_mi_matrix(df, df_syn):
     ax1.set_title("Ground Truth, max=1", fontsize=15)
 
     # Synthetic
-    sns.heatmap(matMI_syn, cmap = sns.color_palette("mako", as_cmap=True).reversed(), ax=ax2)
+    sns.heatmap(
+        matMI_syn, cmap=sns.color_palette("mako", as_cmap=True).reversed(), ax=ax2
+    )
     ax2.set_title("Synthetic Data, max=1", fontsize=15)
 
     plt.tight_layout()

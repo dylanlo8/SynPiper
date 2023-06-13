@@ -4,10 +4,13 @@ import pandas as pd
 import os
 import streamlit as st
 from synthetic_evaluation import *
+from timer import Timer
 
 # streamlit run c:/Users/User/Desktop/SynPiper/main.py
 
 if __name__ == "__main__":
+    timer = Timer()
+    timer.start()
     data_path = os.path.join(os.getcwd(), "datasets", "heartprocessed.csv")
     df_real = pd.read_csv(data_path).drop("Unnamed: 0", axis=1)
 
@@ -40,21 +43,23 @@ if __name__ == "__main__":
             "thal": True,
             "target": True,
         },
-        "epsilon": 5,
+        "epsilon": 80,
         "degree_of_bayesian_network": 3,
     }
 
     piper = SynPiper(
-        data_path, param_dict=params_required, synthesizer_name=synthesizer_name
+        data_path, param_dict = params_required, synthesizer_name = synthesizer_name
     )
 
     # User Input 3: Number of Rows to be generated in Synthetic Dataset
-    # piper.generate_dpsynthesizer(num_tuples_to_generate= 297)
+    piper.generate_dpsynthesizer(num_tuples_to_generate= len(df_real))
 
     df_syn = pd.read_csv(piper.synthetic_filepath).drop("Unnamed: 0", axis=1)
 
     # Running of Streamlit App
     st.title("Synthetic Data Quality Report")
+
+    st.text(f"Total time taken {timer.stop()}")
 
     st.subheader("Total Variational Difference (TVD) Analysis")
     df_tvd, plot = get_all_variational_differences(df_real, df_syn, categorical_data)
