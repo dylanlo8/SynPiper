@@ -53,13 +53,12 @@ if __name__ == "__main__":
 
     # User Input 3: Number of Rows to be generated in Synthetic Dataset
     piper.generate_dpsynthesizer(num_tuples_to_generate= len(df_real))
+    time = timer.stop()
 
     df_syn = pd.read_csv(piper.synthetic_filepath).drop("Unnamed: 0", axis=1)
 
     # Running of Streamlit App
     st.title("Synthetic Data Quality Report")
-
-    st.text(f"Total time taken {timer.stop()}")
 
     st.subheader("Total Variational Difference (TVD) Analysis")
     df_tvd, plot = get_all_variational_differences(df_real, df_syn, categorical_data)
