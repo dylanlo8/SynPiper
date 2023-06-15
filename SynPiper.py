@@ -1,6 +1,9 @@
 from Processor import SDVProcessor, DataSynthesizerProcessor
 from DataSynthesizer.DataGenerator import DataGenerator
 import os
+from sdv.single_table import CTGANSynthesizer, TVAESynthesizer
+import pandas as pd
+
 
 
 class SynPiper:
@@ -14,6 +17,7 @@ class SynPiper:
     # data : input data to train synthetic data generator
 
     ## Initialise appropriate Pre-Processors, check for correct param_dict.
+    
     def __init__(self, data_path, synthesizer_name, param_dict, synthetic_filepath):
         # SDV Pre-Processor
         if synthesizer_name == "ctgan" or synthesizer_name == "tvae":
@@ -32,14 +36,35 @@ class SynPiper:
         self.synthesizer_name = synthesizer_name
         self.data_path = data_path
         self.synthetic_filepath = synthetic_filepath
+        self.param_dict = param_dict
 
-    def generate_ctgan(self):
-        pass
-        # Saves the Synthetic Data csv file to the designated filepath
+    def generate_sdv(self, num_tuples_to_generate):
+        metadata = self.processor.process()
+        real_data = pd.read_csv(self.data_path, index_col=0)
+        
+        
+        
+        if self.synthesizer_name == "ctgan": 
+            synthesizer = CTGANSynthesizer(metadata,
+                                        verbose = True,
+                                        epochs = self.param_dict["epochs"])
 
-    def generate_tvae(self):
-        pass
+        elif self.synthesizer_name == "tvae":
+            synthesizer = TVAESynthesizer(metadata,
+                                        verbose = True,
+                                        epochs = self.param_dict["epochs"])
+
+        print("Starting Generator Training")
+        
+        synthesizer.fit(real_data)
+        
+        print(f"Generator Training Completed, Generating {num_tuples_to_generate} of data")
+        
+        synthetic_data = synthesizer.sample(num_tuples_to_generate)
+        
         # Saves the Synthetic Data csv file to the designated filepath
+        
+        synthetic_data.to_csv(self.synthetic_filepath)
 
     def generate_dpsynthesizer(self, num_tuples_to_generate):
         # Processing input data

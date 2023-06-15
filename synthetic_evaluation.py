@@ -17,7 +17,7 @@ from sdmetrics.single_column import KSComplement
 from sdmetrics.single_column import TVComplement
 
 
-def sdv_metadata_processing(real_data, categorical_threshold=10):
+def sdv_metadata_auto_processing(real_data, categorical_threshold=10):
     """Metadata Processing for sdv_metrics library
     Processes input data into numerical or categorical data based on the
     threshold of the number of unique values in the column.
@@ -37,6 +37,28 @@ def sdv_metadata_processing(real_data, categorical_threshold=10):
             metadata.add_column(column_name=col, sdtype="numerical")
     return metadata
 
+def sdv_metadata_manual_processing(real_data, categorical_attributes):
+    """MANUAL Metadata Processing for sdv_metrics library
+    Processes input data into numerical or categorical data based on the
+    threshold of the number of unique values in the column.
+
+    Args:
+        real_data : Input Dataframe
+        categorical_threshold : Threshold (Integer)
+    Returns:
+        metadata: Synthetic Data Vault metadata for plotting
+    """
+    
+    metadata = SingleTableMetadata()
+
+    for col in real_data.columns:
+        if col in categorical_attributes:
+            metadata.add_column(column_name=col, sdtype="categorical")
+        else:
+            metadata.add_column(column_name=col, sdtype="numerical")
+            
+    return metadata
+
 
 def plot_real_synthetic(real_data, synthetic, colname):
     """Plots both the real and synthetic distribution of the columns.
@@ -52,7 +74,7 @@ def plot_real_synthetic(real_data, synthetic, colname):
     """
 
     # Synthetic Data Vault Processing for get_column_plot function
-    metadata = sdv_metadata_processing(real_data)
+    metadata = sdv_metadata_auto_processing(real_data)
 
     # Synthetic Data Vault's custom get_column_plot function
     fig = get_column_plot(

@@ -14,7 +14,8 @@ df_syn = pd.read_csv(synthetic_filepath, index_col = 0)
 # Running of Streamlit App
 st.title("Synthetic Data Quality Report")
 
-st.text(f"The generator took {st.session_state['time']} seconds.")
+if 'time' in st.session_state.keys():
+    st.text(f"The generator took {st.session_state['time']} seconds.")
 
 st.subheader("Total Variational Difference (TVD) Analysis")
 df_tvd, plot = get_all_variational_differences(df_real, df_syn, cat_cols)
