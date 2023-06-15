@@ -42,8 +42,6 @@ class SynPiper:
         metadata = self.processor.process()
         real_data = pd.read_csv(self.data_path, index_col=0)
         
-        
-        
         if self.synthesizer_name == "ctgan": 
             synthesizer = CTGANSynthesizer(metadata,
                                         verbose = True,
@@ -55,16 +53,14 @@ class SynPiper:
                                         epochs = self.param_dict["epochs"])
 
         print("Starting Generator Training")
-        
         synthesizer.fit(real_data)
         
         print(f"Generator Training Completed, Generating {num_tuples_to_generate} of data")
-        
         synthetic_data = synthesizer.sample(num_tuples_to_generate)
         
         # Saves the Synthetic Data csv file to the designated filepath
-        
         synthetic_data.to_csv(self.synthetic_filepath)
+        print("Successfully saved the synthetic dataset to", self.synthetic_filepath)
 
     def generate_dpsynthesizer(self, num_tuples_to_generate):
         # Processing input data
@@ -80,4 +76,4 @@ class SynPiper:
 
         # Saves the generated synthetic data (csv) to Current Working Directory filepath
         generator.save_synthetic_data(self.synthetic_filepath)
-        print("Successfully saved the dataset to", self.synthetic_filepath)
+        print("Successfully saved the synthetic dataset to", self.synthetic_filepath)
