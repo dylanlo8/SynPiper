@@ -8,8 +8,10 @@ from timer import Timer
 
 def run_dpsyn(params_required, num_tuples_to_generate, data_path, synthetic_filepath):
     piper = SynPiper(
-        data_path, param_dict = params_required, 
-        synthesizer_name = "dpsynthesizer", synthetic_filepath=synthetic_filepath
+        data_path, 
+        param_dict = params_required, 
+        synthesizer_name = "dpsynthesizer", 
+        synthetic_filepath=synthetic_filepath
     )
 
     piper.generate_dpsynthesizer(num_tuples_to_generate= num_tuples_to_generate)
@@ -17,9 +19,20 @@ def run_dpsyn(params_required, num_tuples_to_generate, data_path, synthetic_file
 
 def run_ctgan(params_required, num_tuples_to_generate, data_path, synthetic_filepath):
     piper = SynPiper(
-        data_path = data_path, param_dict = params_required, 
-        synthesizer_name = "ctgan", synthetic_filepath= synthetic_filepath
+        data_path = data_path, 
+        param_dict = params_required, 
+        synthesizer_name = "ctgan", 
+        synthetic_filepath= synthetic_filepath
     )
     
-    piper.generate_ctgan(num_tuples_to_generate = num_tuples_to_generate)
+    piper.generate_sdv(num_tuples_to_generate = num_tuples_to_generate)
+
+def run_tvae(params_required, num_tuples_to_generate, data_path, synthetic_filepath):
+    piper = SynPiper(
+        data_path = data_path, 
+        param_dict = params_required, 
+        synthesizer_name = "tvae", 
+        synthetic_filepath= synthetic_filepath
+    )
     
+    piper.generate_sdv(num_tuples_to_generate = num_tuples_to_generate)

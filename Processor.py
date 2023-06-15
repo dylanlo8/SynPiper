@@ -27,7 +27,6 @@ class SDVProcessor:
         # Generates sdv metadata
         metadata = sdv_metadata_manual_processing(real_data, self.param_dict['categorical_attributes'])
         
-        print("Metadata Loaded!")
         return metadata
 
 class DataSynthesizerProcessor:

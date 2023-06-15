@@ -55,11 +55,11 @@ try:
         "Differentially Private Synthesizer": "dpsynthesizer"
     }  
     synthesizer_name = model_dict[model_name]
-
     st.subheader("Choose Parameters")
-
     ready_to_train = False # When True: activate the Train Button
 
+
+    ### DPSynthesizer
     if synthesizer_name == "dpsynthesizer":
         degree_of_bayesian_networks = st.number_input(
             label="Number of Bayesian Networks", min_value=2, max_value=10
@@ -82,8 +82,11 @@ try:
     # MARK: Implement other synthesizers here
     elif synthesizer_name == "ctgan":
         pass
+    
     else:
         pass
+
+
 
     if ready_to_train:
         st.subheader("Training of Synthesizer")
