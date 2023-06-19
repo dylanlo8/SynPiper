@@ -11,6 +11,8 @@ import json
 from pandas.api.types import is_numeric_dtype
 
 # virtualdatalab metrics for evaluating privacy
+import sys
+sys.path.append("C:\Users\User\Desktop\SynPiper-new\SynPiper\virtualdatalab")
 from virtualdatalab.benchmark import compare
 from virtualdatalab import target_data_manipulation
 

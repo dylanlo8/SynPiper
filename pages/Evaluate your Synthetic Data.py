@@ -49,6 +49,10 @@ st.pyplot(plot_corr_matrix(df_real[num_cols], df_syn[num_cols]))
 st.subheader("Pairwise Mutual Information Score Comparison")
 st.pyplot(plot_mi_matrix(df_real, df_syn))
 
+st.subheader("Privacy Test")
+privacydf = get_dcr_nndr_test(df_real, df_syn, cat_cols)
+st.dataframe(privacydf)
+
 # List of Plots
 st.subheader("Column Distribution Comparison")
 
@@ -60,3 +64,4 @@ selected_col = st.selectbox(label = "Select Column",
              options = df_real.columns)
 
 st.plotly_chart(plot_real_synthetic(df_real, df_syn, selected_col))
+
