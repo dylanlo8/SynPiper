@@ -10,6 +10,7 @@ import plotly.subplots
 import json
 from pandas.api.types import is_numeric_dtype
 
+
 # SDV Metrics Libraries
 from sdv.evaluation.single_table import get_column_plot
 from sdv.metadata import SingleTableMetadata
@@ -121,6 +122,7 @@ def get_all_ks_scores(real_table, synthetic_table, numerical_columns):
         title="Kolmogorov-Smirnov statistic Scores",
     )
     fig.update_yaxes(range=[0, 1])
+    fig.update_traces(textposition='inside')
 
     return df_ks, fig
 
@@ -161,6 +163,7 @@ def get_all_variational_differences(real_table, synthetic_table, categorical_col
         title="Total Variational Difference Scores",
     )
     fig.update_yaxes(range=[0, 1])
+    fig.update_traces(textposition='inside')
 
     return df_tvd, fig
 
@@ -180,6 +183,7 @@ def plot_corr_matrix(real, synthetic):
     sns.heatmap(
         real.corr(), cmap=sns.color_palette("mako", as_cmap=True).reversed(), ax=ax1
     )
+
     ax1.title.set_text("Ground Truth Correlation Matrix")
     sns.heatmap(
         synthetic.corr(),
@@ -230,3 +234,4 @@ def plot_mi_matrix(df, df_syn):
 
     plt.tight_layout()
     return fig
+

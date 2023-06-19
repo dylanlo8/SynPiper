@@ -10,18 +10,19 @@ st.subheader("File Upload")
 uploaded_data = st.file_uploader("Upload your file here...", type=["csv"])
 
 try:
+
     # Navigates to Parent Directory
-    uploaded_data = pd.read_csv(uploaded_data, index_col=0)
     cwd = os.getcwd()
 
     workingpath = os.path.join(cwd, "workingfolder")
     os.makedirs(
         workingpath, exist_ok=True
-    )  # create a workingpath directory, if not already existed
+    )
 
     synthetic_filepath = os.path.join(os.getcwd(), "synthetic.csv")
     path_of_df_real = os.path.join(workingpath, "df_real.csv")
-    
+
+    uploaded_data = pd.read_csv(uploaded_data, index_col=0)
     uploaded_data.to_csv(path_or_buf = path_of_df_real)
     
     # Saves the respective filepaths into streamlit's session
@@ -45,15 +46,19 @@ try:
 
     model_name = st.selectbox(
         label="synthesizer",
-        options=["Differentially Private Synthesizer"]
+        options=["Differentially Private Synthesizer",
+                 "CTGAN",
+                 "TVAE"]
     )
 
     st.caption(f"{model_name} has been selected.")
 
-    # Include other synthesizers in future
     model_dict = {
-        "Differentially Private Synthesizer": "dpsynthesizer"
-    }  
+        "Differentially Private Synthesizer": "dpsynthesizer",
+        "CTGAN" : "ctgan",
+        "TVAE" : "tvae"   
+    } 
+     
     synthesizer_name = model_dict[model_name]
     st.subheader("Choose Parameters")
     ready_to_train = False # When True: activate the Train Button
@@ -80,13 +85,20 @@ try:
             params_required["categorical_attributes"][col] = True
 
     # MARK: Implement other synthesizers here
-    elif synthesizer_name == "ctgan":
-        pass
-    
+    elif synthesizer_name == "ctgan" or synthesizer_name == "tvae":
+        epochs = st.number_input(
+            label="Number of Epochs", min_value = 300, max_value=1500
+        )
+
+        ready_to_train = True
+
+        params_required = {
+            'categorical_attributes' : cat_cols,
+            'epochs' : epochs
+        }
+
     else:
         pass
-
-
 
     if ready_to_train:
         st.subheader("Training of Synthesizer")
@@ -117,10 +129,34 @@ try:
                     
             elif synthesizer_name == "ctgan":
                 if st.button(label = "Generate"): 
-                    pass
+                    timer = Timer()
+                    timer.start()
+                    
+                    # Runs generator and saves synthetic csv into cwd
+                    run_ctgan(params_required, 
+                                num_tuples_to_generate = n_rows_input, 
+                                data_path = path_of_df_real,
+                                synthetic_filepath= synthetic_filepath)
+                    
+                    time = timer.stop()
+                    st.sesion_state['time'] = time
+            
+            elif synthesizer_name == "tvae":
+                if st.button(label = "Generate"): 
+                    timer = Timer()
+                    timer.start()
+                    
+                    # Runs generator and saves synthetic csv into cwd
+                    run_tvae(params_required, 
+                                num_tuples_to_generate = n_rows_input, 
+                                data_path = path_of_df_real,
+                                synthetic_filepath= synthetic_filepath)
+                    
+                    time = timer.stop()
+                    st.sesion_state['time'] = time
                 
 except:
-    st.text("Please upload a Datafile to proceed")
+    st.text("Data not uploaded.")
             
 
 
