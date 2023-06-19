@@ -8,20 +8,18 @@ st.title("Create a New Synthesizer")
 st.subheader("File Upload")
 
 uploaded_data = st.file_uploader("Upload your file here...", type=["csv"])
+# Navigates to Parent Directory
+cwd = os.getcwd()
+
+workingpath = os.path.join(cwd, "workingfolder")
+os.makedirs(
+    workingpath, exist_ok=True
+)
+
+synthetic_filepath = os.path.join(os.getcwd(), "synthetic.csv")
+path_of_df_real = os.path.join(workingpath, "df_real.csv")
 
 try:
-
-    # Navigates to Parent Directory
-    cwd = os.getcwd()
-
-    workingpath = os.path.join(cwd, "workingfolder")
-    os.makedirs(
-        workingpath, exist_ok=True
-    )
-
-    synthetic_filepath = os.path.join(os.getcwd(), "synthetic.csv")
-    path_of_df_real = os.path.join(workingpath, "df_real.csv")
-
     uploaded_data = pd.read_csv(uploaded_data, index_col=0)
     uploaded_data.to_csv(path_or_buf = path_of_df_real)
     

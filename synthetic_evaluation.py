@@ -12,9 +12,7 @@ from pandas.api.types import is_numeric_dtype
 
 # virtualdatalab metrics for evaluating privacy
 import sys
-sys.path.append("C:\Users\User\Desktop\SynPiper-new\SynPiper\virtualdatalab")
-from virtualdatalab.benchmark import compare
-from virtualdatalab import target_data_manipulation
+import os
 
 # SDV Metrics Libraries
 from sdv.evaluation.single_table import get_column_plot
@@ -238,9 +236,3 @@ def plot_mi_matrix(df, df_syn):
 
     plt.tight_layout()
     return fig
-
-def get_dcr_nndr_test(df_real, df_syn, cat_cols):
-    df_real = target_data_manipulation.prepare_common_data_format(df_real, cat_cols)
-    df_syn = target_data_manipulation.prepare_common_data_format(df_syn, cat_cols)
-    privacy_df = compare(df_real, df_syn, metrics_to_return=['statistical-distances'])
-    return privacy_df
