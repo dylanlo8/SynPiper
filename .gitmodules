@@ -1,0 +1,3 @@
+[submodule "virtualdatalab"]
+	path = virtualdatalab
+	url = https://github.com/mostly-ai/virtualdatalab.git
