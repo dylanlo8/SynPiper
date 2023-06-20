@@ -22,7 +22,7 @@ class SDVProcessor:
         self.param_dict = param_dict
 
     def process(self):
-        real_data = pd.read_csv(self.data_path, index_col = 0)
+        real_data = pd.read_csv(self.data_path)
         
         # Generates sdv metadata
         metadata = sdv_metadata_manual_processing(real_data, self.param_dict['categorical_attributes'])
@@ -61,7 +61,7 @@ class DataSynthesizerProcessor:
     def process(self):
         describer = DataDescriber()
         describer.describe_dataset_in_correlated_attribute_mode(
-            dataset_file=self.data_path,
+            dataset_file = self.data_path,
             epsilon=self.param_dict["epsilon"],
             k=self.param_dict["degree_of_bayesian_network"],
             attribute_to_is_categorical=self.param_dict["categorical_attributes"],

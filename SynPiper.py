@@ -40,7 +40,7 @@ class SynPiper:
 
     def generate_sdv(self, num_tuples_to_generate):
         metadata = self.processor.process()
-        real_data = pd.read_csv(self.data_path, index_col=0)
+        real_data = pd.read_csv(self.data_path)
         
         if self.synthesizer_name == "ctgan": 
             synthesizer = CTGANSynthesizer(metadata,
@@ -66,6 +66,7 @@ class SynPiper:
         # Processing input data
         description_file = self.processor.process()
 
+        print("DP Synthesizer Processing Completed!")
         # Generating Synthetic Data
         generator = DataGenerator()
 
