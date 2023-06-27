@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from anonymisation_utils import *
+from anonymizer.auto_detect import *
 import os
 import sys
 
@@ -19,7 +19,8 @@ try:
     uploaded_data = st.file_uploader("Upload your data here", type=["csv"])
     df = pd.read_csv(uploaded_data)
     cols = df.columns
-    st.dataframe(df.head(10)) # Show preview of DataFrame
+    st.dataframe(df.head(10),
+                 hide_index=True) # Show preview of DataFrame
 
     st.subheader('Data Tagging')
     data_types = ["Continous", "Categorical", "Datetime"]
@@ -27,7 +28,7 @@ try:
     sensitivity_types = ["Direct Identifier, Indirect Identifier, Sensitive, Non-Sensitive"]
 
     # Inference and Pre-selection
-    inferred_dtypes = cols.map(lambda col : check_column_type(df[col]))
+    inferred_dtypes = cols.map(lambda col : check_column_type(df[col])) #datatypes inferred
     preselected_information_types = cols.map(lambda row : "Others") # Others preselected
     preselected_sensitivity_types = cols.map(lambda row : "Non-Sensitive") # Non-sensitive preselected
 
@@ -39,6 +40,7 @@ try:
     
     # Select Box Table for Data Tagging
     editted_df = st.data_editor(initial_tagging_df,
+                                hide_index = True,
                                 column_config = {
                                     "Datatype" : st.column_config.SelectboxColumn(
                                         "Pick Datatype",
@@ -65,11 +67,29 @@ try:
                             )
 
     st.subheader('Data Transformation')
-    col1,col2 = st.columns([1,3])
+    col1,col2 = st.columns([1,3]) # 0.25 / 0.75 ratio
 
     with col1:
         st.selectbox(label = 'Select Column Name',
                      options = df.columns)
+        
+    # with col2:
+        # Input bar for transformation options
+
+        # Information Type
+
+
+        # Sensitivity Type
+
+
+
+        # Before Dataset
+
+
+        # After Dataset
+        
+   
+
 
 
 

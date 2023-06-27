@@ -19,6 +19,7 @@ from sdv.evaluation.single_table import get_column_plot
 from sdv.metadata import SingleTableMetadata
 from sdmetrics.single_column import KSComplement
 from sdmetrics.single_column import TVComplement
+from sdmetrics.single_table import LogisticDetection
 
 def sdv_metadata_auto_processing(real_data, categorical_threshold=10):
     """Metadata Processing for sdv_metrics library
@@ -80,6 +81,7 @@ def plot_real_synthetic(real_data, synthetic, colname):
     metadata = sdv_metadata_auto_processing(real_data)
 
     # Synthetic Data Vault's custom get_column_plot function
+        # to compare column-wise distributions between real and synthetic
     fig = get_column_plot(
         real_data=real_data,
         synthetic_data=synthetic,
@@ -123,6 +125,7 @@ def get_all_ks_scores(real_table, synthetic_table, numerical_columns):
         y="ks_scores",
         title="Kolmogorov-Smirnov statistic Scores",
     )
+
     fig.update_yaxes(range=[0, 1])
     fig.update_traces(textposition='inside')
 
@@ -236,3 +239,21 @@ def plot_mi_matrix(df, df_syn):
 
     plt.tight_layout()
     return fig
+
+def get_logistic_detection_metric(real_data, synthetic):
+    """ Applies the LogisticDetection algorithm and get a Score
+
+    Args:
+        real: Real Data
+        synthetic: Synthetic Data (in the same format as Real Data)
+
+    Returns:
+        score from 0 to 1: 
+        Low = Can distinguish real and synthetic rows : High Privacy
+        High = Cannot distinguish real and synthetic rows : Low Privacy
+
+    """
+
+    # Synthetic Data Vault Processing for get_column_plot function
+    metadata = sdv_metadata_auto_processing(real_data)
+
