@@ -26,23 +26,27 @@ class Masker:
             Mapping Information, Sensitivity, and Column Types to recommended Functions.
         """
         self.information_type_mask_mapper = {
-            "NRIC" : [self.nric_masking],
-            "Email" : [self.email_masking],
+            "NRIC" : ["Mask NRIC"],
+            "Email" : ["Mask Email"],
             "Others" : []
         }
 
         self.sensitivity_type_mask_mapper = {
-            "Direct Identifier" : [self.pseudonymize_sha256, self.surpression, self.full_masking],
+            "Direct Identifier" : ["Pseudonymise", "Surpress", "Full Masking"],
             "Indirect Identifier" : [], 
             "Sensitive" : [], 
-            "Non-Sensitive" : [self.retention]
+            "Non-Sensitive" : ["Retain"] 
         }
 
         self.col_type_mask_mapper = {
-            "Categorical" : [self.encode],
-            "Continuous" : [self.generalise_num_bin, self.generalise_num_bin_mean],
-            "DateTime" : [self.generalise_date_bin]
+            "Categorical" : ["Encode"],
+            "Continuous" : ["Generalise (Numerical Bin)", "Generalise (Numerical Bin Mean)"],
+            "DateTime" : ["Generalise (Date Bin)", "Generalise (Date Bin Median)"],
+            "Primary Key" : ["Pseudonymise"],
+            "Other" : []
         }
+
+        self.general_type_funcs = ["Retain", "Surpress", "Pseudonymise", "Full Masking", "Transpose", "Shuffle"]
 
     
     def generate_list_trans_functions(self, information_type, sensitivity_type, col_type):
@@ -53,21 +57,34 @@ class Masker:
         Information Type -> Sensitivity Type -> Column Type
         """
         
-        result = {}
+        result = []
+ 
         # Information Type
-        if information_type == "NRIC":
-            result['Mask NRIC'] = self.information_type_mask_mapper['Mask NRIC']
-        elif information_type == "Email":
-            result['Mask Email'] = self.information_type_mask_mapper['Mask Email']
-        else:
-            pass
+        result += self.information_type_mask_mapper[information_type]
 
         # Sensitivity Type
+        result += self.sensitivity_type_mask_mapper[sensitivity_type]
+
         if sensitivity_type == "Direct Identifier":
-            result[""]
+            # early break for direct indentifiers to limit available transformation functions
+            return result 
+
         # Column Type
+        result += self.col_type_mask_mapper[col_type]
 
+        # General Type
+        for func in self.general_type_funcs:
+            # Check if already exist
+            if func not in result:
+                result.append(func)
+        
+        return result # Ordered List of Transformation Names
 
+    def get_transformer_from_name(self, transformer_name):
+        if transformer_name not in self.transform_name_mapper:
+            raise ValueError("Transformer Name not found or added to the list of transformers")
+        
+        return self.transform_name_mapper[transformer_name]
     """
     DATA TRANSFORMATION METHODS
     """
@@ -86,7 +103,7 @@ class Masker:
 
     # Information Type Transformations
 
-    def email_masking(self, email_col, n_chars_to_retain) -> pd.Series:
+    def email_masking(self, email_col, n_chars_to_retain = 0) -> pd.Series:
         def mask_email(email):
             username, domain = email.split('@')
             masked_username = username[:n_chars_to_retain] + '*' * (len(username) - n_chars_to_retain)
@@ -111,7 +128,7 @@ class Masker:
         # SHA 256 Hashing
         return string_col.apply(hash_sha256)
     
-    def full_masking(self, string_col, index) -> pd.Series:
+    def full_masking(self, string_col) -> pd.Series:
         mask_char = lambda x : len(x) * '-'
         return string_col.apply(mask_char)
 
@@ -135,8 +152,8 @@ class Masker:
     def generalise_date_bin(self, date_col, n_bins = 10) -> pd.Series:
         return pd.cut(date_col, n_bins).apply(lambda x : pd.Interval(x.left.normalize(), x.right.normalize()))
 
-    def generalise_date_median(self, date_col):
-        pass
+    def generalise_date_median(self, date_col, n_bins = 10):
+        return date_col
 
     # Categorical Values
     def encode(self, cat_col):
@@ -145,6 +162,6 @@ class Masker:
 
     # Transposition
     def transpose(self, col):
-        pass
+        return col
 
     # 
