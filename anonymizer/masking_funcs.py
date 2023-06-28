@@ -5,27 +5,74 @@ from sklearn.preprocessing import LabelEncoder
 
 class Masker:
     def __init__(self):
-        information_type_mask_mapper = {
+        # Maps a Name to its Transformer
+        self.transform_name_mapper = {
+            "Shuffle" : self.shuffle,
+            "Retain" : self.retention,
+            "Surpress" : self.surpression,
+            "Mask Email" : self.email_masking,
+            "Mask NRIC" : self.nric_masking,
+            "Pseudonymise" : self.pseudonymize_sha256,
+            "Full Masking" : self.full_masking,
+            "Generalise (Numerical Bin)" : self.generalise_num_bin,
+            "Generalise (Numerical Bin Mean)" : self.generalise_num_bin_mean,
+            "Generalise (Date Bin)" : self.generalise_date_bin,
+            "Generalise (Date Bin Median)" : self.generalise_date_median,
+            "Encode" : self.encode,
+            "Transpose" : self.transpose
+        }
+
+        """
+            Mapping Information, Sensitivity, and Column Types to recommended Functions.
+        """
+        self.information_type_mask_mapper = {
             "NRIC" : [self.nric_masking],
             "Email" : [self.email_masking],
             "Others" : []
         }
 
-        sensitivity_type_mask_mapper = {
+        self.sensitivity_type_mask_mapper = {
             "Direct Identifier" : [self.pseudonymize_sha256, self.surpression, self.full_masking],
             "Indirect Identifier" : [], 
             "Sensitive" : [], 
             "Non-Sensitive" : [self.retention]
         }
 
-        col_type_mask_mapper = {
+        self.col_type_mask_mapper = {
             "Categorical" : [self.encode],
             "Continuous" : [self.generalise_num_bin, self.generalise_num_bin_mean],
             "DateTime" : [self.generalise_date_bin]
         }
 
+    
+    def generate_list_trans_functions(self, information_type, sensitivity_type, col_type):
+        """
+        Generates a recommended list of transformers in order of priority.
+        [a, b] : order of priority (from left to right a > b).
+
+        Information Type -> Sensitivity Type -> Column Type
+        """
+        
+        result = {}
+        # Information Type
+        if information_type == "NRIC":
+            result['Mask NRIC'] = self.information_type_mask_mapper['Mask NRIC']
+        elif information_type == "Email":
+            result['Mask Email'] = self.information_type_mask_mapper['Mask Email']
+        else:
+            pass
+
+        # Sensitivity Type
+        if sensitivity_type == "Direct Identifier":
+            result[""]
+        # Column Type
+
+
+    """
+    DATA TRANSFORMATION METHODS
+    """
     # General 
-    def swapping(self, col) -> pd.Series:
+    def shuffle(self, col) -> pd.Series:
         new_col = pd.Series(np.random.permutation(col))
         return new_col
 
@@ -99,3 +146,5 @@ class Masker:
     # Transposition
     def transpose(self, col):
         pass
+
+    # 
