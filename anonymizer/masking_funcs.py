@@ -24,10 +24,15 @@ class Masker:
 
         """
             Mapping Information, Sensitivity, and Column Types to recommended Functions.
+            
+            Make sure that key values (the property type) must belong to the approved list
+            of property types in auto_detect.py file.
         """
         self.information_type_mask_mapper = {
             "NRIC" : ["Mask NRIC"],
             "Email" : ["Mask Email"],
+            "Salary" : ["Generalise (Numerical Bin)"],
+            "Phone Number" : ["Pseudonymise"],
             "Others" : []
         }
 
@@ -42,7 +47,7 @@ class Masker:
             "Categorical" : ["Encode"],
             "Continuous" : ["Generalise (Numerical Bin)", "Generalise (Numerical Bin Mean)"],
             "DateTime" : ["Generalise (Date Bin)", "Generalise (Date Bin Median)"],
-            "Primary Key" : ["Pseudonymise"],
+            "Unique/Sparse" : ["Pseudonymise"],
             "Other" : []
         }
 
@@ -89,6 +94,7 @@ class Masker:
     DATA TRANSFORMATION METHODS
     """
     # General 
+    
     def shuffle(self, col) -> pd.Series:
         new_col = pd.Series(np.random.permutation(col))
         return new_col
@@ -152,8 +158,12 @@ class Masker:
     def generalise_date_bin(self, date_col, n_bins = 10) -> pd.Series:
         return pd.cut(date_col, n_bins).apply(lambda x : pd.Interval(x.left.normalize(), x.right.normalize()))
 
-    def generalise_date_median(self, date_col, n_bins = 10):
-        return date_col
+    def generalise_date_median(date_col, n_bins=10):
+        intervals = pd.cut(date_col, n_bins).apply(lambda x: pd.Interval(x.left.normalize(), x.right.normalize()))
+        median_dates = intervals.apply(lambda x: x.left + (x.right - x.left) / 2)
+        return median_dates
+    
+    
 
     # Categorical Values
     def encode(self, cat_col):

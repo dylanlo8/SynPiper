@@ -10,7 +10,21 @@ class DataAnonymizer:
         self.properties_frame = self.auto_detector.construct_column_mapper()
         
 
-    def change_property(self, colname, property_type, new_property):
+    def change_property(self, colname : str, property_type : str, new_property : str):
+        """
+        Changes the property at a cellular level. 
+        
+        Additional: Detects special information types like NRIC and 
+            auto update Sensitivity Types accordingly
+
+        Args:
+            colname (String): Name of Column
+            property_type (String): Either one from ["column_type, "information_type", "sensitivity_type"]
+            new_property (String): _description_
+
+        Returns:
+            self.properties_frame: Updated property frame
+        """
         if colname not in self.data.columns:
             raise AttributeError("Unknown Column Name")
 
@@ -35,7 +49,7 @@ class DataAnonymizer:
             # Implement Special Changes to other property types here.
             if new_property == "NRIC":
                 self.properties_frame.loc[colname, 'Sensitivity Type'] = "Direct Identifier"
-                self.properties_frame.loc[colname, 'Column Type'] = "Primary Key"
+                self.properties_frame.loc[colname, 'Column Type'] = "Unique/Sparse"
 
             return self.properties_frame
 
@@ -52,7 +66,36 @@ class DataAnonymizer:
         else:
             raise AttributeError("Unknown property type found. Please specify one of the following, [column_type, information_type, sensitivity_type]")
 
+   
+    def change_property_rowwise(self, colname: str, property_list : list):
+        """Changes the property row-wise
 
+        Args:
+            property_list (List): ["Categorical", "Others", "Sensitive"]
+            
+        Returns:
+            self.properties_frame: Updated property frame
+        """
+        new_column_type = property_list[0]
+        new_information_type = property_list[1]
+        new_sensitivity_type = property_list[2]
+        
+        # Check if User Specified inputs are within approved list of properties
+        if new_column_type not in self.auto_detector.list_approved_column_types():
+            raise ValueError("Column Type not found. Please specify value from approved list.")
+        
+        if new_information_type not in self.auto_detector.list_approved_information_types():
+            raise ValueError("Information Type not found. Please specify value from approved list.")
+        
+        if new_sensitivity_type not in self.auto_detector.list_approved_sensitivity_types():
+            raise ValueError("Sensitivity Type not found. Please specify value from approved list.")
+        
+        # Perform Modifications
+        self.properties_frame.loc[colname, 'Column Type'] = new_column_type
+        self.properties_frame.loc[colname, 'Information Type'] = new_information_type
+        self.properties_frame.loc[colname, 'Sensitivity Type'] = new_sensitivity_type
+        return self.properties_frame
+        
     def get_mask_table(self):
         self.col_allowed_funcs = {} # Dictionary Holding all allowed Transformation Names
         # e.g. age : ["Generalise (Numerical Bin)", "Retain", "Suppress"]
