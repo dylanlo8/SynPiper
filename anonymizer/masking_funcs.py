@@ -24,31 +24,30 @@ class Masker:
 
         """
             Mapping Information, Sensitivity, and Column Types to recommended Functions.
-            
-            Make sure that key values (the property type) must belong to the approved list
-            of property types in auto_detect.py file.
         """
         self.information_type_mask_mapper = {
             "NRIC" : ["Mask NRIC"],
             "Email" : ["Mask Email"],
-            "Salary" : ["Generalise (Numerical Bin)"],
-            "Phone Number" : ["Pseudonymise"],
-            "Others" : []
+            "Phone Number" : ["Pseudonymise", "Surpress"],
+            "Others" : [], #flow to sensitivity/column type checking
+            "Phone Number" : [], #flow to sensitivity/column type checking
+            "Salary" : [], #flow to sensitivity/column type checking
+            "Date of Birth" : [] #flow to sensitivity/column type checking
         }
 
         self.sensitivity_type_mask_mapper = {
             "Direct Identifier" : ["Pseudonymise", "Surpress", "Full Masking"],
-            "Indirect Identifier" : [], 
-            "Sensitive" : [], 
+            "Indirect Identifier" : [], #flow to column type checking
+            "Sensitive" : [], #flow to column type checking
             "Non-Sensitive" : ["Retain"] 
         }
 
         self.col_type_mask_mapper = {
             "Categorical" : ["Encode"],
-            "Continuous" : ["Generalise (Numerical Bin)", "Generalise (Numerical Bin Mean)"],
-            "DateTime" : ["Generalise (Date Bin)", "Generalise (Date Bin Median)"],
-            "Unique/Sparse" : ["Pseudonymise"],
-            "Other" : []
+            "Continuous" : ["Generalise (Numerical Bin Mean)", "Generalise (Numerical Bin)"],
+            "Datetime" : ["Generalise (Date Bin Median)", "Generalise (Date Bin)"],
+            "Primary Key" : ["Pseudonymise"],
+            "Other" : ["Retain"]
         }
 
         self.general_type_funcs = ["Retain", "Surpress", "Pseudonymise", "Full Masking", "Transpose", "Shuffle"]
@@ -94,7 +93,6 @@ class Masker:
     DATA TRANSFORMATION METHODS
     """
     # General 
-    
     def shuffle(self, col) -> pd.Series:
         new_col = pd.Series(np.random.permutation(col))
         return new_col
@@ -106,22 +104,6 @@ class Masker:
         # Let user know that is the existence of this column but info is removed.
         surpress = lambda x : '-'
         return col.apply(surpress)
-
-    # Information Type Transformations
-
-    def email_masking(self, email_col, n_chars_to_retain = 0) -> pd.Series:
-        def mask_email(email):
-            username, domain = email.split('@')
-            masked_username = username[:n_chars_to_retain] + '*' * (len(username) - n_chars_to_retain)
-            return masked_username + '@' + domain
-        
-        return email_col.apply(mask_email)
-
-    def nric_masking(self, nric_col) -> pd.Series:
-        def mask_nric(nric):
-            return (len(nric) - 4) * '*' + nric[-4:]
-        
-        return nric_col.apply(mask_nric)
 
     # Direct Identifiers Transformation
     def pseudonymize_sha256(self, col) -> pd.Series:
@@ -156,15 +138,21 @@ class Masker:
 
     # DateTime Transformation
     def generalise_date_bin(self, date_col, n_bins = 10) -> pd.Series:
+        date_col = pd.to_datetime(date_col)
         return pd.cut(date_col, n_bins).apply(lambda x : pd.Interval(x.left.normalize(), x.right.normalize()))
 
-    def generalise_date_median(date_col, n_bins=10):
-        intervals = pd.cut(date_col, n_bins).apply(lambda x: pd.Interval(x.left.normalize(), x.right.normalize()))
-        median_dates = intervals.apply(lambda x: x.left + (x.right - x.left) / 2)
-        return median_dates
-    
-    
+    def generalise_date_median(self, date_col, n_bins = 10):
+        # Not implemented yet
+        date_col = pd.to_datetime(date_col)
 
+        def find_median_date(date1, date2):
+            delta = abs(date2 - date1)
+            midpt = delta / 2
+            median_date = min(date1, date2) + midpt
+            return median_date
+        
+        return pd.cut(date_col, n_bins).apply(lambda x : find_median_date(x.left.normalize(), x.right.normalize()))
+         
     # Categorical Values
     def encode(self, cat_col):
         le = LabelEncoder()
@@ -174,4 +162,18 @@ class Masker:
     def transpose(self, col):
         return col
 
-    # 
+    # Information Type Transformations
+    def email_masking(self, email_col, n_chars_to_retain = 0) -> pd.Series:
+        def mask_email(email):
+            username, domain = email.split('@')
+            masked_username = username[:n_chars_to_retain] + '*' * (len(username) - n_chars_to_retain)
+            return masked_username + '@' + domain
+        
+        return email_col.apply(mask_email)
+
+    def nric_masking(self, nric_col) -> pd.Series:
+        def mask_nric(nric):
+            return (len(nric) - 4) * '*' + nric[-4:]
+        
+        return nric_col.apply(mask_nric)
+    

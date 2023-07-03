@@ -8,7 +8,7 @@ class DataAnonymizer:
         self.auto_detector = DataAutoDetecter(df)
         self.data = df
         self.properties_frame = self.auto_detector.construct_column_mapper()
-        
+        #self.transformed_data
 
     def change_property(self, colname : str, property_type : str, new_property : str):
         """
@@ -148,4 +148,10 @@ class DataAnonymizer:
 
         return self.transformed_data 
         
-        
+    def get_quasi_identifiers(self):
+        property_frame = self.properties_frame
+        series = property_frame['Sensitivity Type'] == 'Indirect Identifier'
+        return series[series].index
+
+    def get_quasi_masked_table(self):
+        return self.transformed_data.loc[:, self.get_quasi_identifiers()]

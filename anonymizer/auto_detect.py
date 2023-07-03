@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+from datetime import datetime
 
 class DataAutoDetecter:
     def __init__(self, df):
@@ -15,27 +16,30 @@ class DataAutoDetecter:
         
         """
         self.data_types = ["Continuous", "Categorical", "Datetime", "Unique/Sparse"]
-        self.information_types = ["NRIC", "Email", "Phone Number", "Salary", "Others"]
+        self.information_types = ["NRIC", "Email", "Phone Number", "Salary", "Date of Birth", "Others"]
         self.sensitivity_types = ["Direct Identifier", "Indirect Identifier", "Sensitive", "Non-Sensitive"]
 
         self.data = df
         
-    def __detect_column_type(self, column, unique_val_ratio = 0.2):    
+    def __detect_column_type(self, column, unique_val_ratio = 0.1):    
         unique_values = column.unique()
         if len(unique_values) == column.shape[0]:
             return 'Unique/Sparse'
         
-        if pd.api.types.is_numeric_dtype(column):
-            return 'Continuous'
+        if pd.api.types.is_datetime64_dtype(column):
+            return 'Datetime'
         
-        if len(unique_values) <= (unique_val_ratio * len(column)) or pd.api.types.is_object_dtype(column):
+        if date_format_checker(column):
+            return 'Datetime'
+        
+        if len(unique_values) <= 20:
             return 'Categorical'
         
         if pd.api.types.is_categorical_dtype(column):
             return 'Categorical'
-
-        if pd.api.types.is_datetime64_dtype(column):
-            return 'Datetime'
+        
+        if pd.api.types.is_numeric_dtype(column):
+            return 'Continuous'
         
         # If none of the above, consider it as other/unknown type
         return 'Other'
@@ -138,8 +142,11 @@ def col_name_information_checker(colname : str):
     if colname == "salary" or colname == "pay" or colname == "income":
         return "Salary"
     
-    if colname == "Email" or colname == "email":
+    if colname == "email":
         return "Email"
+
+    if colname == "dob" or colname == 'date of birth':
+        return "Date of Birth"
     
     return "Others"
 
@@ -148,6 +155,18 @@ def col_name_sensitivity_checker(colname : str):
     colname = colname.lower()
     if colname == "nric" or colname == "fin":
         return "Direct Identifier"
+    
+    if colname == 'age':
+        return 'Indirect Identifier'
+    
+    if colname == 'race':
+        return 'Indirect Identifier'
+    
+    if colname == 'gender' or colname == 'sex':
+        return 'Indirect Identifier'
+    
+    if colname == 'date of birth' or colname == 'dob':
+        return 'Indirect Identifier'
     
     if colname == "salary" or colname == "pay" or colname == "income":
         return "Sensitive"
@@ -158,7 +177,7 @@ def col_name_sensitivity_checker(colname : str):
     return "Others"
 
 """
-    Utilities for Auto Dectection of Information Types from Column Values
+    Utilities for Auto Dectection of Column Values
 """
 
 def nric_checker(col : pd.Series):
@@ -203,6 +222,33 @@ def email_checker(col):
     
     bool_col = col.map(lambda row : email_pattern_checker(row))
     return True if bool_col.mean() > 0.9 else False
+
+def date_format_checker(col):
+    ratio = 0.1
+    col = col.apply(lambda row: str(row))[: int(ratio * len(col))] #check 10% of rows
+    # Define the datetime formats to check
+    datetime_formats = ['%d %b %Y', 
+                        '%d/%m/%Y', '%m/%d/%Y', '%Y/%m/%d', '%Y/%d/%m',
+                        '%d %B %Y', 
+                        '%d-%m-%Y', '%m-%d-%Y', '%Y-%m-%d',
+                        '%Y/%m/%d']
+
+    def check_datetime(value):
+        for format in datetime_formats:
+            try:
+                datetime.strptime(value, format)
+                return True
+            except ValueError:
+                continue
+
+        return False
+
+    # Check if the values in the column can be parsed as datetime objects
+    is_datetime = col.apply(check_datetime)
+
+    # If only true, return
+    return is_datetime.unique()[0] and len(is_datetime.unique()) == 1
+        
 
 
             
