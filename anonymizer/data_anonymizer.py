@@ -1,6 +1,10 @@
 import pandas as pd
 from masking_funcs import Masker
 from auto_detect import DataAutoDetecter
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+import numpy as np
 
 class DataAnonymizer:
     def __init__(self, df):
@@ -9,6 +13,7 @@ class DataAnonymizer:
         self.data = df
         self.properties_frame = self.auto_detector.construct_column_mapper()
         #self.transformed_data
+        #self.reidentification_table
 
     def change_property(self, colname : str, property_type : str, new_property : str):
         """
@@ -151,7 +156,50 @@ class DataAnonymizer:
     def get_quasi_identifiers(self):
         property_frame = self.properties_frame
         series = property_frame['Sensitivity Type'] == 'Indirect Identifier'
-        return series[series].index
+        return list(series[series].index)
+    
+    def get_quasi_original_table(self):
+        return self.data.loc[:, self.get_quasi_identifiers()]
 
     def get_quasi_masked_table(self):
         return self.transformed_data.loc[:, self.get_quasi_identifiers()]
+    
+
+    """
+    Evaluation Metrics
+    """
+
+    def get_re_identification_table(self):
+        quasi_masked_table = self.get_quasi_masked_table() # Indirect Identifier Masked Table
+
+        # Generating the count of appeared values in the masked df (aka. number of duplicated values + 1)
+        duplicate_rows = quasi_masked_table[quasi_masked_table.duplicated(keep = False)].value_counts().reset_index()
+        
+        # Set count for non-duplicated rows = 1
+        non_duplicate_rows = quasi_masked_table[~quasi_masked_table.duplicated(keep=False)]
+        non_duplicate_rows.loc[:, "count"] = 1
+
+        count_table = pd.concat([duplicate_rows, non_duplicate_rows])
+        
+        # calculate reidentification score for each duplicated row
+        reidentification_score = count_table['count'].map(lambda x : 100 / x) 
+        count_table['reidentifiability score'] = reidentification_score
+
+        self.reidentification_table = count_table
+        return self.reidentification_table
+    
+    def avg_re_identification_score(self):
+        df = self.reidentification_table
+        return np.mean(df[df['reidentifiability score'] < 100]['reidentifiability score'])
+
+    
+
+        
+        
+
+
+
+
+
+
+    

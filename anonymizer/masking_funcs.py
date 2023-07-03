@@ -121,7 +121,7 @@ class Masker:
         return string_col.apply(mask_char)
 
     # Numerical Transformation
-    def generalise_num_bin(self, num_col, n_bins = 10) -> pd.Series:
+    def generalise_num_bin(self, num_col, n_bins = 6) -> pd.Series:
         if num_col.dtype == 'int64':
             return pd.cut(num_col, bins = n_bins, precision = 0)
         elif num_col.dtype == 'float':
@@ -129,7 +129,7 @@ class Masker:
         else:
             return None
 
-    def generalise_num_bin_mean(self, num_col, n_bins = 10) -> pd.Series:
+    def generalise_num_bin_mean(self, num_col, n_bins = 6) -> pd.Series:
         df_cut = self.generalise_num_bin(num_col, n_bins)
         if num_col.dtype == 'int64':
             return df_cut.map(lambda x : round((x.left + x.right) / 2, 0))
@@ -137,11 +137,11 @@ class Masker:
             return df_cut.map(lambda x : (x.left + x.right) / 2)
 
     # DateTime Transformation
-    def generalise_date_bin(self, date_col, n_bins = 10) -> pd.Series:
+    def generalise_date_bin(self, date_col, n_bins = 6) -> pd.Series:
         date_col = pd.to_datetime(date_col)
         return pd.cut(date_col, n_bins).apply(lambda x : pd.Interval(x.left.normalize(), x.right.normalize()))
 
-    def generalise_date_median(self, date_col, n_bins = 10):
+    def generalise_date_median(self, date_col, n_bins = 6):
         # Not implemented yet
         date_col = pd.to_datetime(date_col)
 
