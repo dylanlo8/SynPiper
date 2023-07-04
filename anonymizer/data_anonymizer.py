@@ -2,8 +2,6 @@ import pandas as pd
 from masking_funcs import Masker
 from auto_detect import DataAutoDetecter
 import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.express as px
 import numpy as np
 
 class DataAnonymizer:
@@ -126,32 +124,38 @@ class DataAnonymizer:
         return self.col_allowed_funcs[colname]
 
     def change_masking(self, colname, masking_name):
-        if colname not in self.data.columns:
-            raise ValueError("Column name not found.")
-        if masking_name not in self.col_allowed_funcs[colname]:
-            raise IndexError(f"{masking_name} not found in {colname} list of allowed transformations.")
-        
-        # Update Mask Table with new Masking Name
-        self.transformer_table.loc[colname, 'Transformer'] = masking_name
-        return self.transformer_table
+        try: 
+            if colname not in self.data.columns:
+                raise ValueError("Column name not found.")
+            if masking_name not in self.col_allowed_funcs[colname]:
+                raise IndexError(f"{masking_name} not found in {colname} list of allowed transformations.")
+            
+            # Update Mask Table with new Masking Name
+            self.transformer_table.loc[colname, 'Transformer'] = masking_name
+            return self.transformer_table
+        except AttributeError:
+            print("Masking Table not Found. Call get_mask_table() to load transformer table first.")
     
     # Could include extra args if the function allows for it
     def apply_masking(self):
-        self.transformed_data = pd.DataFrame()
+        try: 
+            self.transformed_data = pd.DataFrame()
 
-        for colname in self.data.columns:
-            # Retrieve selected Transformer
-            selected_transformer_name = self.transformer_table.loc[colname, 'Transformer']
-            # Retrieve Transformer function
-            selected_transformer_func = self.data_masker.get_transformer_from_name(selected_transformer_name)
+            for colname in self.data.columns:
+                # Retrieve selected Transformer
+                selected_transformer_name = self.transformer_table.loc[colname, 'Transformer']
+                # Retrieve Transformer function
+                selected_transformer_func = self.data_masker.get_transformer_from_name(selected_transformer_name)
 
-            # Apply function on column
-            transformed_col = selected_transformer_func(self.data[colname])
+                # Apply function on column
+                transformed_col = selected_transformer_func(self.data[colname])
 
-            # Add column to transformed data DataFrame
-            self.transformed_data[colname] = transformed_col
+                # Add column to transformed data DataFrame
+                self.transformed_data[colname] = transformed_col
 
-        return self.transformed_data 
+            return self.transformed_data 
+        except AttributeError:
+            print("Masking Table not Found. Call get_mask_table() to load transformer table first.")
         
     def get_quasi_identifiers(self):
         property_frame = self.properties_frame
@@ -172,30 +176,61 @@ class DataAnonymizer:
     def get_re_identification_table(self):
         quasi_masked_table = self.get_quasi_masked_table() # Indirect Identifier Masked Table
 
-        # Generating the count of appeared values in the masked df (aka. number of duplicated values + 1)
+        # Generating equivalence class size
         duplicate_rows = quasi_masked_table[quasi_masked_table.duplicated(keep = False)].value_counts().reset_index()
         
         # Set count for non-duplicated rows = 1
         non_duplicate_rows = quasi_masked_table[~quasi_masked_table.duplicated(keep=False)]
-        non_duplicate_rows.loc[:, "count"] = 1
+        non_duplicate_rows.loc[:, "count"] = 1 
 
         count_table = pd.concat([duplicate_rows, non_duplicate_rows])
         
-        # calculate reidentification score for each duplicated row
-        reidentification_score = count_table['count'].map(lambda x : 100 / x) 
-        count_table['reidentifiability score'] = reidentification_score
+        # Calculate reidentification probabilities for each duplicated row (1 * 100 / equivalence class size)
+        reidentification_prob = count_table['count'].map(lambda x : 100 / x) 
+        count_table['reidentifiability proba'] = reidentification_prob
 
+        # Save as a property
         self.reidentification_table = count_table
         return self.reidentification_table
     
-    def avg_re_identification_score(self):
+    def avg_re_identification_prob(self):
         df = self.reidentification_table
-        return np.mean(df[df['reidentifiability score'] < 100]['reidentifiability score'])
+        # rows of equivalence class size 1 (i.e. score of 100)
+        avg_proba = np.mean(df[df['reidentifiability proba'] < 100]['reidentifiability proba'])
+        return f"Average Re-identification Probability: {avg_proba}%"
 
+    def percentage_rows_below_k_threshold(self, k):
+        try:
+            df = self.reidentification_table
+            return sum(df[df['count'] <= k]['count']) * 100 / sum(df['count'])
+        except:
+            print("Generate the reidentification table using get_re_identification_table before calling this function again.")
+
+    def unique_row_proportion(self):
+        # Calculate the proportion of rows that are Unique
+        return f"Percentage of Unique Rows: {self.percentage_rows_below_k_threshold(1)}%"
     
+    def generate_k_threshold_plot(self):
+        k = 2
+        percentage = 0
+        lst_percentage = []
+        while k <= 5:
+            percentage = self.percentage_rows_below_k_threshold(k)
+            lst_percentage.append(percentage)
+            k += 1
+        
+        plt.xticks(range(2, k))
+        plt.title("Proportion of Re-identifiabile Rows against K Threshold (%)")
+        plt.xlabel("K Threshold")
+        plt.ylabel("Proportion of Re-identifiable Rows")
+        plt.plot(range(2, k), lst_percentage)
+        
 
         
+
         
+
+
 
 
 

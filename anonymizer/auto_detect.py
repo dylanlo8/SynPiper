@@ -15,7 +15,7 @@ class DataAutoDetecter:
         This is to allow the program to auto recommend transformers to a particular property set.
         
         """
-        self.data_types = ["Continuous", "Categorical", "Datetime", "Unique/Sparse"]
+        self.data_types = ["Continuous", "Categorical", "Datetime", "Unique/Sparse", "Others"]
         self.information_types = ["NRIC", "Email", "Phone Number", "Salary", "Date of Birth", "Others"]
         self.sensitivity_types = ["Direct Identifier", "Indirect Identifier", "Sensitive", "Non-Sensitive"]
 
@@ -42,7 +42,7 @@ class DataAutoDetecter:
             return 'Continuous'
         
         # If none of the above, consider it as other/unknown type
-        return 'Other'
+        return 'Others'
     
     def __detect_information_type(self, column, colname):
         # Column Name Checking
@@ -153,27 +153,17 @@ def col_name_information_checker(colname : str):
 # Sensitivity Type
 def col_name_sensitivity_checker(colname : str):
     colname = colname.lower()
-    if colname == "nric" or colname == "fin":
-        return "Direct Identifier"
-    
-    if colname == 'age':
-        return 'Indirect Identifier'
-    
-    if colname == 'race':
-        return 'Indirect Identifier'
-    
-    if colname == 'gender' or colname == 'sex':
-        return 'Indirect Identifier'
-    
-    if colname == 'date of birth' or colname == 'dob':
-        return 'Indirect Identifier'
-    
-    if colname == "salary" or colname == "pay" or colname == "income":
-        return "Sensitive"
-    
-    if colname == "Email" or colname == "email":
-        return "Sensitive"
-    
+
+    mapper = {"nric" : "Direct Identifier", "fin" : "Direct Identifier",
+              "age" : "Indirect Identifier", "race" : "Indirect Identifier",
+              "gender": "Indirect Identifier", "sex" : "Indirect Identifier",
+              "date of birth" : "Indirect Identifier", "dob" : "Indirect Identifier",
+              "salary" : "Sensitive", "pay" : "Sensitive", "income" : "Sensitive",
+              "email" : "Sensitive"
+              }
+    if colname in mapper.keys():
+        return mapper[colname]
+
     return "Others"
 
 """
@@ -231,7 +221,8 @@ def date_format_checker(col):
                         '%d/%m/%Y', '%m/%d/%Y', '%Y/%m/%d', '%Y/%d/%m',
                         '%d %B %Y', 
                         '%d-%m-%Y', '%m-%d-%Y', '%Y-%m-%d',
-                        '%Y/%m/%d']
+                        '%Y/%m/%d',
+                        '%Y/%m', '%Y %b', '%b %Y']
 
     def check_datetime(value):
         for format in datetime_formats:

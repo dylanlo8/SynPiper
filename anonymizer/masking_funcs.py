@@ -29,16 +29,16 @@ class Masker:
             "NRIC" : ["Mask NRIC"],
             "Email" : ["Mask Email"],
             "Phone Number" : ["Pseudonymise", "Surpress"],
-            "Others" : [], #flow to sensitivity/column type checking
-            "Phone Number" : [], #flow to sensitivity/column type checking
-            "Salary" : [], #flow to sensitivity/column type checking
-            "Date of Birth" : [] #flow to sensitivity/column type checking
+            "Others" : [], # flow to sensitivity/column type checking
+            "Phone Number" : [], # flow to sensitivity/column type checking
+            "Salary" : [], # flow to sensitivity/column type checking
+            "Date of Birth" : [] # flow to sensitivity/column type checking
         }
 
         self.sensitivity_type_mask_mapper = {
             "Direct Identifier" : ["Pseudonymise", "Surpress", "Full Masking"],
-            "Indirect Identifier" : [], #flow to column type checking
-            "Sensitive" : [], #flow to column type checking
+            "Indirect Identifier" : [], # flow to column type checking
+            "Sensitive" : [], # flow to column type checking
             "Non-Sensitive" : ["Retain"] 
         }
 
@@ -46,8 +46,8 @@ class Masker:
             "Categorical" : ["Encode"],
             "Continuous" : ["Generalise (Numerical Bin Mean)", "Generalise (Numerical Bin)"],
             "Datetime" : ["Generalise (Date Bin Median)", "Generalise (Date Bin)"],
-            "Primary Key" : ["Pseudonymise"],
-            "Other" : ["Retain"]
+            "Unique/Sparse" : ["Pseudonymise"],
+            "Others" : ["Retain"],
         }
 
         self.general_type_funcs = ["Retain", "Surpress", "Pseudonymise", "Full Masking", "Transpose", "Shuffle"]
@@ -121,7 +121,7 @@ class Masker:
         return string_col.apply(mask_char)
 
     # Numerical Transformation
-    def generalise_num_bin(self, num_col, n_bins = 6) -> pd.Series:
+    def generalise_num_bin(self, num_col, n_bins = 10) -> pd.Series:
         if num_col.dtype == 'int64':
             return pd.cut(num_col, bins = n_bins, precision = 0)
         elif num_col.dtype == 'float':
@@ -129,7 +129,7 @@ class Masker:
         else:
             return None
 
-    def generalise_num_bin_mean(self, num_col, n_bins = 6) -> pd.Series:
+    def generalise_num_bin_mean(self, num_col, n_bins = 10) -> pd.Series:
         df_cut = self.generalise_num_bin(num_col, n_bins)
         if num_col.dtype == 'int64':
             return df_cut.map(lambda x : round((x.left + x.right) / 2, 0))
@@ -137,11 +137,11 @@ class Masker:
             return df_cut.map(lambda x : (x.left + x.right) / 2)
 
     # DateTime Transformation
-    def generalise_date_bin(self, date_col, n_bins = 6) -> pd.Series:
+    def generalise_date_bin(self, date_col, n_bins = 10) -> pd.Series:
         date_col = pd.to_datetime(date_col)
         return pd.cut(date_col, n_bins).apply(lambda x : pd.Interval(x.left.normalize(), x.right.normalize()))
 
-    def generalise_date_median(self, date_col, n_bins = 6):
+    def generalise_date_median(self, date_col, n_bins = 10):
         # Not implemented yet
         date_col = pd.to_datetime(date_col)
 
