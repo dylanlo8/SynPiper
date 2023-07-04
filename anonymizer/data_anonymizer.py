@@ -195,34 +195,38 @@ class DataAnonymizer:
     
     def avg_re_identification_prob(self):
         df = self.reidentification_table
-        # rows of equivalence class size 1 (i.e. score of 100)
+        # Calculate the average reidentification probability of the dataset 
+        # What is the percentage of this record being re-identified?
         avg_proba = np.mean(df[df['reidentifiability proba'] < 100]['reidentifiability proba'])
         return f"Average Re-identification Probability: {avg_proba}%"
 
-    def percentage_rows_below_k_threshold(self, k):
+    def percentage_rows_above_k_threshold(self, k):
         try:
             df = self.reidentification_table
-            return sum(df[df['count'] <= k]['count']) * 100 / sum(df['count'])
+            return sum(df[df['count'] >= k]['count']) * 100 / sum(df['count'])
         except:
             print("Generate the reidentification table using get_re_identification_table before calling this function again.")
 
     def unique_row_proportion(self):
         # Calculate the proportion of rows that are Unique
-        return f"Percentage of Unique Rows: {self.percentage_rows_below_k_threshold(1)}%"
+        # rows of equivalence class size 1 (i.e. score of 100)
+        df = self.reidentification_table
+        unique_proportion = sum(df[df['count'] == 1]['count']) * 100 / sum(df['count'])
+        return f"Percentage of Unique Rows: {unique_proportion}%"
     
     def generate_k_threshold_plot(self):
         k = 2
         percentage = 0
         lst_percentage = []
+        # Cap k at 5
         while k <= 5:
-            percentage = self.percentage_rows_below_k_threshold(k)
+            percentage = self.percentage_rows_above_k_threshold(k)
             lst_percentage.append(percentage)
             k += 1
         
         plt.xticks(range(2, k))
-        plt.title("Proportion of Re-identifiabile Rows against K Threshold (%)")
         plt.xlabel("K Threshold")
-        plt.ylabel("Proportion of Re-identifiable Rows")
+        plt.ylabel("Proportion of Rows above K Threshold (%)")
         plt.plot(range(2, k), lst_percentage)
         
 
