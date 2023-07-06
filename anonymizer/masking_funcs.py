@@ -5,7 +5,12 @@ from sklearn.preprocessing import LabelEncoder
 
 class Masker:
     def __init__(self):
-        # Maps a Name to its Transformer
+        """
+            Maps a Transformer Name to its function
+
+            UPDATE new masking functions in this dictionary. To make these functions auto-detectable, 
+            add the new function name according to the property type mapper below.
+        """
         self.transform_name_mapper = {
             "Shuffle" : self.shuffle,
             "Retain" : self.retention,
@@ -23,7 +28,9 @@ class Masker:
         }
 
         """
-            Mapping Information, Sensitivity, and Column Types to recommended Functions.
+            Property type mapping to recommended Functions.
+            The first element in the property type function list will be chosen as the default masker
+            if the user does not change the masking function.
         """
         self.information_type_mask_mapper = {
             "NRIC" : ["Mask NRIC"],
@@ -56,9 +63,11 @@ class Masker:
     def generate_list_trans_functions(self, information_type, sensitivity_type, col_type):
         """
         Generates a recommended list of transformers in order of priority.
-        [a, b] : order of priority (from left to right a > b).
 
-        Information Type -> Sensitivity Type -> Column Type
+        Priority of property type: 
+        Information Type as unique masking functions (like NRIC masking) can be applied to specific information types
+        -> Sensitivity Type as direct / indirect identifiers have recommended masking functions.
+        -> Column Type 
         """
         
         result = []
@@ -70,13 +79,13 @@ class Masker:
         result += self.sensitivity_type_mask_mapper[sensitivity_type]
 
         if sensitivity_type == "Direct Identifier":
-            # early break for direct indentifiers to limit available transformation functions
+            # limit available transformation functions for direct identifiers
             return result 
 
         # Column Type
         result += self.col_type_mask_mapper[col_type]
 
-        # General Type
+        # General Type (applicable to all types)
         for func in self.general_type_funcs:
             # Check if already exist
             if func not in result:
@@ -89,9 +98,11 @@ class Masker:
             raise ValueError("Transformer Name not found or added to the list of transformers")
         
         return self.transform_name_mapper[transformer_name]
+    
     """
-    DATA TRANSFORMATION METHODS
+    PUBLIC COLUMN-WISE DATA TRANSFORMATION METHODS
     """
+
     # General 
     def shuffle(self, col) -> pd.Series:
         new_col = pd.Series(np.random.permutation(col))

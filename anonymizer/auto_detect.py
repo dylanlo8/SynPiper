@@ -23,7 +23,8 @@ class DataAutoDetecter:
         
     def __detect_column_type(self, column, unique_val_ratio = 0.1):    
         unique_values = column.unique()
-        if len(unique_values) == column.shape[0]:
+        # If all rows unique or 90% of rows are unique
+        if (len(unique_values) / column.shape[0]) >= 0.9:
             return 'Unique/Sparse'
         
         if pd.api.types.is_datetime64_dtype(column):
@@ -47,10 +48,10 @@ class DataAutoDetecter:
     def __detect_information_type(self, column, colname):
         # Column Name Checking
         if col_name_information_checker(colname) != "Others":
-            # If others returned -> pass
+            # if specific information type detected from name, return that type
             return col_name_information_checker(colname)
         
-        # Column Elements Checking
+        # Column values checking
         if nric_checker(column):
             return "NRIC"
         
@@ -237,10 +238,4 @@ def date_format_checker(col):
     # Check if the values in the column can be parsed as datetime objects
     is_datetime = col.apply(check_datetime)
 
-    # If only true, return
     return is_datetime.unique()[0] and len(is_datetime.unique()) == 1
-        
-
-
-            
-

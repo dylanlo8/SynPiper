@@ -11,6 +11,15 @@ if __name__ == '__main__':
     st.subheader("File Upload")
 
     uploaded_data = st.file_uploader("Upload your file here...", type=["csv"])
+
+    cwd = os.getcwd()
+    workingpath = os.path.join(cwd, "workingfolder")
+    os.makedirs(workingpath, exist_ok=True)
+
+    # Creation of Filepaths
+    synthetic_filepath = os.path.join(workingpath, "synthetic.csv")
+    path_of_df_train = os.path.join(workingpath, "df_train.csv")
+    path_of_df_val = os.path.join(workingpath, "df_val.csv")
     
     try: 
     # Navigates to Parent Directory
@@ -18,17 +27,6 @@ if __name__ == '__main__':
         
         st.subheader("Preview of Dataset")
         st.dataframe(uploaded_data.head())
-
-        cwd = os.getcwd()
-        workingpath = os.path.join(cwd, "workingfolder")
-        os.makedirs(
-            workingpath, exist_ok=True
-        )
-
-        # Creation of Filepaths
-        synthetic_filepath = os.path.join(os.getcwd(), "synthetic.csv")
-        path_of_df_train = os.path.join(workingpath, "df_train.csv")
-        path_of_df_val = os.path.join(workingpath, "df_val.csv")
 
         # Train - Holdout set Split
         df_train, df_val = train_val_split(uploaded_data, 
@@ -50,7 +48,7 @@ if __name__ == '__main__':
 
         num_cols = st.multiselect(
             label = "Numerical Features",
-            options=[col for col in avail_cols if col not in cat_cols],
+            options=[col for col in avail_cols if col not in cat_cols]
         )
 
         # Saves the list of categorical and numerical data into st session state
@@ -124,7 +122,6 @@ if __name__ == '__main__':
             for col in cat_cols:
                 params_required["categorical_attributes"][col] = True
 
-        # MARK: Implement other synthesizers here
         elif synthesizer_name == "ctgan" or synthesizer_name == "tvae":
             epochs = st.number_input(
                 label="Number of Epochs", min_value = 300, max_value=1500
@@ -199,4 +196,4 @@ if __name__ == '__main__':
                         st.session_state['time'] = time
 
     except:
-        st.text("Upload your Data to proceed.")
+        st.caption("Upload Real Data csv to proceed.")
