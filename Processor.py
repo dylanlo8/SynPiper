@@ -5,9 +5,11 @@ import pandas as pd
 
 class SDVProcessor:
     """
-    Required Parameters: 
-        1) categorical_attributes : List of categorical attributes in the dataset
-        2) epochs : Number of epochs to run the model training on
+    Attributes
+        params_required: 
+            1) categorical_attributes : List of categorical attributes in the dataset
+            2) epochs : Number of epochs to run the model training on (>= 500)
+        data_path: Path of Train Data
     """
     
     def __init__(self, data_path, param_dict):
@@ -15,6 +17,7 @@ class SDVProcessor:
                            "epochs"]
         self.data_path = data_path
 
+        # Check for inappropriate parameters
         for param in param_dict.keys():
             if param not in params_required:
                 raise ValueError("Unspecified Parameter")
@@ -31,7 +34,7 @@ class SDVProcessor:
 
 class DataSynthesizerProcessor:
     """
-    Required Parameters: 
+    Parameters: 
         1) categorical_attributes : List of categorical attributes in the dataset
         2) epsilon : Privacy Budget (integer). Lower epsilon means more privatised data (less resemblance). 
             0 to turn off differential privacy.
@@ -39,6 +42,7 @@ class DataSynthesizerProcessor:
             Recommended value: 3
     """
     
+    # Set description file directory
     description_file = os.path.join(os.getcwd(), "description.json")
 
     def __init__(self, data_path, param_dict):
@@ -48,7 +52,7 @@ class DataSynthesizerProcessor:
             "degree_of_bayesian_network",
         ]
 
-        # Checks if User has keyed in an appropriate Parameter Dictionary
+        # Check for inappropriate parameters
         for param in param_dict.keys():
             if param not in params_required:
                 raise ValueError(

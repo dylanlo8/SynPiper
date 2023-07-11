@@ -12,7 +12,7 @@ class DataAnonymizer:
         self.properties_frame = self.auto_detector.construct_column_mapper()
 
         """
-            Properties not initialised yet.
+            --- Attributes that will be initialised later on ---
 
             # self.transformed_data : Transformed dataset 
             # self.default_transformed_data : (Default) transformed dataset
@@ -352,17 +352,3 @@ class DataAnonymizer:
         plt.plot(range(2, k), lst_percentage, label = "User")
         plt.plot(range(2, k), lst_percentage_default, label = "Default")
         plt.legend(loc="lower left")
-        
-
-        
-
-        
-
-
-
-
-
-
-
-
-    

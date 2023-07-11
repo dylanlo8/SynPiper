@@ -6,8 +6,6 @@ import seaborn as sns
 from sklearn.metrics import normalized_mutual_info_score
 import plotly.express as px
 import plotly.figure_factory as ff
-import plotly.subplots
-import json
 from pandas.api.types import is_numeric_dtype
 
 # virtualdatalab metrics for evaluating privacy
@@ -62,7 +60,6 @@ def sdv_metadata_manual_processing(real_data, categorical_attributes):
             metadata.add_column(column_name=col, sdtype="numerical")
             
     return metadata
-
 
 def plot_real_synthetic(real_data, synthetic, colname):
     """Plots both the real and synthetic distribution of the columns.
@@ -202,6 +199,8 @@ def plot_corr_matrix(real, synthetic):
 # Plots a Pairwise Mutual Information Matrix
 def plot_mi_matrix(df, df_syn):
     """Plots the Pairwise Mutual Information Matrix of Real and Synthetic data.
+    Calculates an overall score for the amount of mutual information retained.
+
     Args:
         df: Real Data
         df_syn: Synthetic Data (in the same format as Real Data)
@@ -209,7 +208,10 @@ def plot_mi_matrix(df, df_syn):
     Returns:
         fig: A (1,2) subplot containing the pairwise mutual information matrix
         of both real and synthetic data for comparison.
+        mutual_info_score: A score for the average mutual information retained
+
     """
+    mi_score_passing_threshold = 0.85
 
     matMI = pd.DataFrame(index=df.columns, columns=df.columns, dtype=float)
     matMI_syn = pd.DataFrame(index=df.columns, columns=df.columns, dtype=float)
@@ -224,7 +226,7 @@ def plot_mi_matrix(df, df_syn):
                 df_syn[row], df_syn[col], average_method="arithmetic"
             )
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
     plt.suptitle("Pairwise Mutual Information Score (Normalised)", fontsize=25)
 
     # Real
@@ -237,23 +239,27 @@ def plot_mi_matrix(df, df_syn):
     )
     ax2.set_title("Synthetic Data, max=1", fontsize=15)
 
+    diff_matrix = np.absolute(matMI_syn - matMI)
+    sns.heatmap(
+        diff_matrix, cmap = sns.cubehelix_palette(as_cmap=True), ax = ax3
+    )
+
+    ax3.set_title("Difference", fontsize = 15)
     plt.tight_layout()
-    return fig
 
-def get_logistic_detection_metric(real_data, synthetic):
-    """ Applies the LogisticDetection algorithm and get a Score
+    # Get lower triangle and map a 1-x function to the elements
+    lower_triangle_ele = np.tril(1 - diff_matrix, -1)
+    
 
-    Args:
-        real: Real Data
-        synthetic: Synthetic Data (in the same format as Real Data)
+    n = len(df.columns)
 
-    Returns:
-        score from 0 to 1: 
-        Low = Can distinguish real and synthetic rows : High Privacy
-        High = Cannot distinguish real and synthetic rows : Low Privacy
+    # Compute score
+    mutual_info_score = round(np.sum(lower_triangle_ele)/ (n * (n - 1) / 2), 2)
 
-    """
+    # Calculate the fraction of pair-wise relationships that exceed the difference threshold
+    threshold_function = np.vectorize(lambda ele_score : 1 if ele_score > mi_score_passing_threshold else 0)
+    n_pairwise_passed = round(np.sum(threshold_function(lower_triangle_ele)) / (n * (n - 1) / 2), 2)
 
-    # Synthetic Data Vault Processing for get_column_plot function
-    metadata = sdv_metadata_auto_processing(real_data)
+    return fig, mutual_info_score, n_pairwise_passed
+
 
