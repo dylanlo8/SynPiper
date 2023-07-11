@@ -5,8 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 
 class Masker:
     def __init__(self):
-        """
-            Maps a Transformer Name to its function
+        """ Maps a Transformer Name to its function
 
             UPDATE new masking functions in this dictionary. To make these functions auto-detectable, 
             add the new function name according to the property type mapper below.
