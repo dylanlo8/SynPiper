@@ -6,7 +6,11 @@ import pandas as pd
 
 class SynPiper:
     """
-    Attributes:
+    Uninitialised Attributes:
+        processor: Allocated input data processor based on chosen synthesizer
+        generated_samples: synthetic data (pandas Dataframe format)
+    
+    Initialised Attributes:
         synthesizer_name: Name of Synthesizer
         data_path: File Path of where the Real Data csv is found
         synthetic_filepath: File Path where Synthetic Data csv will be stored
@@ -15,15 +19,25 @@ class SynPiper:
 
     # Initialise appropriate Pre-Processors, check for correct param_dict.
     def __init__(self, data_path, synthesizer_name, param_dict, synthetic_filepath):
+        """ Initialiser for Synthesizer
+        Args:
+            synthesizer_name: Name of Synthesizer
+            data_path: File Path of where the Real Data csv is found
+            synthetic_filepath: File Path where Synthetic Data csv will be stored
+            param_dict: Dictionary of parameters required for synthesizer
+        """
+
         # SDV Pre-Processor
         if synthesizer_name == "ctgan" or synthesizer_name == "tvae":
             print("Initialising SDV Processor")
             self.processor = SDVProcessor(data_path, param_dict)
+            print("Processor initialised!")
 
         # DataSynthesizer Pre-processor
         elif synthesizer_name == "dpsynthesizer":
             print("Initialising DataSynthesizer Processor")
             self.processor = DataSynthesizerProcessor(data_path, param_dict)
+            print("Processor initialised!")
 
         # Unspecified Synthesizer Name Error
         else:
@@ -34,8 +48,31 @@ class SynPiper:
         self.synthetic_filepath = synthetic_filepath
         self.param_dict = param_dict
 
+    def generate(self, num_tuples_to_generate):
+        """ General generate function which calls the appropriate generating function
+        based on the name of synthesizer initialised.
+
+        Args:
+            num_tuples_to_generate: Number of samples to generate
+
+        Returns:
+            None
+        """
+        if self.synthesizer_name == "ctgan":
+            self.generate_sdv(num_tuples_to_generate=num_tuples_to_generate)
+
+        elif self.synthesizer_name == "tvae":
+            self.generate_sdv(num_tuples_to_generate= num_tuples_to_generate)
+
+        elif self.synthesizer_name == "dpsynthesizer":
+            self.generate_dpsynthesizer(num_tuples_to_generate=num_tuples_to_generate)
+
+        else:
+            raise ValueError("Unknown Synthesizer Name found.")
+    
     # CTGAN and TVAE (belonging to Synthetic Data Vault (sdv) library)
     def generate_sdv(self, num_tuples_to_generate):
+        print("Processing input data...")
         metadata = self.processor.process()
         real_data = pd.read_csv(self.data_path)
         
@@ -47,7 +84,7 @@ class SynPiper:
         elif self.synthesizer_name == "tvae":
             synthesizer = TVAESynthesizer(metadata,
                                         epochs = self.param_dict["epochs"])
-
+        
         print("Starting Generator Training")
         synthesizer.fit(real_data)
         
@@ -58,20 +95,27 @@ class SynPiper:
         synthetic_data.to_csv(self.synthetic_filepath)
         print("Successfully saved the synthetic dataset to", self.synthetic_filepath)
 
+        # Store the synthetic samples as an attribute
+        self.generated_samples = synthetic_data
+
     # DataSynthesizer's Library
     def generate_dpsynthesizer(self, num_tuples_to_generate):
+        print("Processing input data...")
         # Processing input data
         description_file = self.processor.process()
-        # description_file = os.path.join(os.getcwd(), "description.json")
-        print("DP Synthesizer Processing Completed!")
+        print("DP Synthesizer Processing Complete")
+
         # Generating Synthetic Data
         generator = DataGenerator()
-
         print(f"Generating {num_tuples_to_generate} rows of Synthetic Data.")
         generator.generate_dataset_in_correlated_attribute_mode(
             num_tuples_to_generate, description_file
         )
         
-        # Saves the generated synthetic data (csv) to Current Working Directory filepath
+        # Saves the generated synthetic data (csv) to synthetic filepath
         generator.save_synthetic_data(self.synthetic_filepath)
         print("Successfully saved the synthetic dataset to", self.synthetic_filepath)
+        print("Access the synthetic samples by calling .generated_samples")
+
+        # Store the synthetic samples as an attribute
+        self.generated_samples = pd.read_csv(self.synthetic_filepath)

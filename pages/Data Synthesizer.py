@@ -108,14 +108,10 @@ if __name__ == '__main__':
             ready_to_train = True
 
             params_required = {
-                "categorical_attributes": {},
+                "categorical_attributes": cat_cols,
                 "epsilon": epsilon,
                 "degree_of_bayesian_network": degree_of_bayesian_networks,
             }
-
-            # Inputting categorical attributes
-            for col in cat_cols:
-                params_required["categorical_attributes"][col] = True
 
         elif synthesizer_name == "ctgan" or synthesizer_name == "tvae":
             epochs = st.number_input(

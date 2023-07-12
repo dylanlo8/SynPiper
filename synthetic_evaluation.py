@@ -7,10 +7,7 @@ from sklearn.metrics import normalized_mutual_info_score
 import plotly.express as px
 import plotly.figure_factory as ff
 from pandas.api.types import is_numeric_dtype
-
-# virtualdatalab metrics for evaluating privacy
-import sys
-import os
+import warnings
 
 # SDV Metrics Libraries
 from sdv.evaluation.single_table import get_column_plot
@@ -20,7 +17,7 @@ from sdmetrics.single_column import TVComplement
 from sdmetrics.single_table import LogisticDetection
 
 def sdv_metadata_auto_processing(real_data, categorical_threshold=10):
-    """Metadata Processing for sdv_metrics library
+    """ Metadata Processing for sdv_metrics library
     Processes input data into numerical or categorical data based on the
     threshold of the number of unique values in the column.
 
@@ -40,7 +37,7 @@ def sdv_metadata_auto_processing(real_data, categorical_threshold=10):
     return metadata
 
 def sdv_metadata_manual_processing(real_data, categorical_attributes):
-    """MANUAL Metadata Processing for sdv_metrics library
+    """ MANUAL Metadata Processing for sdv_metrics library
     Processes input data into numerical or categorical data based on the
     threshold of the number of unique values in the column.
 
@@ -66,12 +63,12 @@ def plot_real_synthetic(real_data, synthetic, colname):
     Works for both categorical and continuous data.
 
     Args:
-        real: Real Data
-        synthetic: Synthetic Data (in the same format as Real Data)
-        colname: Name of the Column (categorical or continuous allowed)
+        real (Dataframe): Real Data
+        synthetic (Dataframe): Synthetic Data (in the same format as Real Data)
+        colname (String): Name of the Column (categorical or continuous allowed)
 
     Returns:
-        fig: Plotly Figure of Real and Synthetic Distribution
+        fig (plotly figure): Plotly Figure of Real and Synthetic Distribution
     """
 
     # Synthetic Data Vault Processing for get_column_plot function
@@ -97,8 +94,8 @@ def get_all_ks_scores(real_table, synthetic_table, numerical_columns):
         numerical_columns: List of numerical column names
 
     Returns:
-        df_ks : Pandas DataFrame of the KS-Scores for each numerical column
-        fig : A plotly barplot of KS-Scores
+        df_ks (Dataframe): Pandas DataFrame of the KS-Scores for each numerical column
+        fig (plotly figure): A plotly barplot of KS-Scores
     """
     results = []
     series_results = {}
@@ -134,14 +131,13 @@ def get_all_variational_differences(real_table, synthetic_table, categorical_col
     between the real and synthetic categorical columns.
 
     Args:
-        real_table: Pandas DataFrame of Real Data
-        synthetic_table: Pandas DataFrame of Synthetic Data
-            (in the same format as Real Data)
-        categorical_columns: A List of categorical columns names.
+        real_table (Dataframe): Pandas DataFrame of Real Data
+        synthetic_table (Dataframe): Pandas DataFrame of Synthetic Data
+        categorical_columns (List): A list of categorical columns names.
 
     Returns:
-        df_tvd: Pandas DataFrame of the TVD Scores for each categorical column
-        fig: A plotly barplot of TVD-Scores
+        df_tvd (Dataframe): Pandas DataFrame of the TVD Scores for each categorical column
+        fig (plotly figure): A plotly barplot of TVD-Scores
 
     """
     results = []
@@ -171,17 +167,18 @@ def get_all_variational_differences(real_table, synthetic_table, categorical_col
 
 
 def plot_corr_matrix(real, synthetic):
-    """Plots the Pairwise Correlation Matrix of Real and Synthetic data.
+    """ Plots the Pairwise Correlation Matrix of Real and Synthetic data.
     Args:
-        real: Real Data
-        synthetic: Synthetic Data (in the same format as Real Data)
+        real (Dataframe): Real Data
+        synthetic (Dataframe): Synthetic Data (in the same format as Real Data)
 
     Returns:
-        fig: A (1,2) subplot containing the pairwise correlation matrix
-        of both real and synthetic data for comparison.
+        fig (Seaborn Figure): A (1,2) subplot containing the pairwise correlation matrix
+             of both real and synthetic data for comparison.
     """
     fig, (ax1, ax2) = plt.subplots(figsize=(15, 6), ncols=2)
     plt.suptitle("Pairwise Correlation Score", fontsize=25)
+
     sns.heatmap(
         real.corr(), cmap=sns.color_palette("mako", as_cmap=True).reversed(), ax=ax1
     )
@@ -193,12 +190,14 @@ def plot_corr_matrix(real, synthetic):
         ax=ax2,
     )
     ax2.title.set_text("Synthetic Data Correlation Matrix")
+
+    plt.tight_layout()
     return fig
 
 
 # Plots a Pairwise Mutual Information Matrix
 def plot_mi_matrix(df, df_syn):
-    """Plots the Pairwise Mutual Information Matrix of Real and Synthetic data.
+    """ Plots the Pairwise Mutual Information Matrix of Real and Synthetic data.
     Calculates an overall score for the amount of mutual information retained.
 
     Args:
@@ -206,11 +205,15 @@ def plot_mi_matrix(df, df_syn):
         df_syn: Synthetic Data (in the same format as Real Data)
 
     Returns:
-        fig: A (1,2) subplot containing the pairwise mutual information matrix
-        of both real and synthetic data for comparison.
+        fig: A (1,3) subplot containing 3 axes.
+            ax1 : Ground Truth Mutual Information matrix
+            ax2 : Synthetic data mutual information matrix
+            ax3 : Absolute difference mutual information matrix
         mutual_info_score: A score for the average mutual information retained
-
+        n_pairwise_passed: Proportion of pair-wise relationships that retained threshold amount
+                           of mutual information (default = 85% of MI retained)
     """
+    warnings.filterwarnings("ignore")
     mi_score_passing_threshold = 0.85
 
     matMI = pd.DataFrame(index=df.columns, columns=df.columns, dtype=float)
@@ -254,11 +257,11 @@ def plot_mi_matrix(df, df_syn):
     n = len(df.columns)
 
     # Compute score
-    mutual_info_score = round(np.sum(lower_triangle_ele)/ (n * (n - 1) / 2), 2)
+    mutual_info_score = round(np.sum(lower_triangle_ele)/ (n * (n - 1) / 2), 4)
 
     # Calculate the fraction of pair-wise relationships that exceed the difference threshold
     threshold_function = np.vectorize(lambda ele_score : 1 if ele_score > mi_score_passing_threshold else 0)
-    n_pairwise_passed = round(np.sum(threshold_function(lower_triangle_ele)) / (n * (n - 1) / 2), 2)
+    n_pairwise_passed = round(np.sum(threshold_function(lower_triangle_ele)) / (n * (n - 1) / 2), 4)
 
     return fig, mutual_info_score, n_pairwise_passed
 
