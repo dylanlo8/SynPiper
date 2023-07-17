@@ -257,11 +257,11 @@ def plot_mi_matrix(df, df_syn):
     n = len(df.columns)
 
     # Compute score
-    mutual_info_score = round(np.sum(lower_triangle_ele)/ (n * (n - 1) / 2), 4)
+    mutual_info_score = 100 * round(np.sum(lower_triangle_ele)/ (n * (n - 1) / 2), 4)
 
     # Calculate the fraction of pair-wise relationships that exceed the difference threshold
     threshold_function = np.vectorize(lambda ele_score : 1 if ele_score > mi_score_passing_threshold else 0)
-    n_pairwise_passed = round(np.sum(threshold_function(lower_triangle_ele)) / (n * (n - 1) / 2), 4)
+    n_pairwise_passed = 100 * round(np.sum(threshold_function(lower_triangle_ele)) / (n * (n - 1) / 2), 4)
 
     return fig, mutual_info_score, n_pairwise_passed
 

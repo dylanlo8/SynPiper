@@ -31,7 +31,7 @@ if __name__ == '__main__':
         # Train - Holdout set Split
         df_train, df_val = train_val_split(uploaded_data, 
                                            uploaded_data.columns[-1], 
-                                           ratio = 0.2) # 20% Validation set
+                                           ratio = 0.7) 
         df_train.to_csv(path_or_buf = path_of_df_train, index = False)
         df_val.to_csv(path_or_buf = path_of_df_val, index = False)
 
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         df_summary = pd.DataFrame(
             {
                 "Column Names": all_cols,
-                "Datatypes": datatypes_lst,
+                "Selected Datatype": datatypes_lst,
                 "Number of Unique Values" : unique_vals_lst
             }
         )
@@ -142,79 +142,45 @@ if __name__ == '__main__':
                 n_rows_input = st.number_input(
                     label="", 
                     min_value=1, 
-                    max_value=100000,
+                    max_value=1000000,
                     label_visibility= "collapsed")
 
             with col2: # Train Button 
-                if synthesizer_name == "dpsynthesizer":
-                    if st.button(label = "Generate"): 
-                        timer = Timer()
-                        timer.start()
-                        
-                        # Runs generator and saves synthetic csv into cwd
-                        run_dpsyn(params_required, 
-                                    num_tuples_to_generate = n_rows_input, 
-                                    data_path = path_of_df_train,
-                                    synthetic_filepath= synthetic_filepath)
-                        
-                        time = timer.stop()
-                        ready_to_download = True
-                        
-                elif synthesizer_name == "ctgan":
-                    if st.button(label = "Generate"): 
-                        timer = Timer()
-                        timer.start()
-                        
-                        # Runs generator and saves synthetic csv into cwd
-                        run_ctgan(params_required, 
-                                num_tuples_to_generate = n_rows_input, 
-                                data_path = path_of_df_train,
-                                synthetic_filepath= synthetic_filepath)
-                        
-                        time = timer.stop()
-                        ready_to_download = True
-                        
-                
-                elif synthesizer_name == "tvae":
-                    if st.button(label = "Generate"): 
-                        timer = Timer()
-                        timer.start()
-                        
-                        # Runs generator and saves synthetic csv into cwd
-                        run_tvae(params_required, 
-                                num_tuples_to_generate = n_rows_input, 
-                                data_path = path_of_df_train,
-                                synthetic_filepath= synthetic_filepath)
-                        
-                        time = timer.stop()
-                        ready_to_download = True
+                if st.button(label = "Generate"): 
+                    piper = SynPiper(
+                        path_of_df_train, 
+                        param_dict = params_required, 
+                        synthesizer_name = synthesizer_name, 
+                        synthetic_filepath=synthetic_filepath)
+                    piper.generate(num_tuples_to_generate = n_rows_input)
 
-        if ready_to_download:
-            df_syn = pd.read_csv(synthetic_filepath)
+        df_syn = pd.read_csv(synthetic_filepath)
 
-            @st.cache_data
-            def convert_df(df):
-                # IMPORTANT: Cache the conversion to prevent computation on every rerun
-                return df.to_csv().encode('utf-8')
-            
-            csv_syn = convert_df(df_syn)
-            
-            st.download_button(label = "Download Synthetic Data as CSV",
-                               data = csv_syn,
-                               file_name = 'df_syn',
-                               mime='text/csv')
-            
-            csv_train = convert_df(df_train)
-            st.download_button(label = "Download Training Real Data as CSV",
-                               data = csv_train,
-                               file_name = 'df_train',
-                               mime='text/csv')
-            
-            csv_holdout = convert_df(df_val)
-            st.download_button(label = "Download Holdout Real Data as CSV",
-                               data = csv_holdout,
-                               file_name = 'df_val',
-                               mime='text/csv')
-            
+        @st.cache_data
+        def convert_df(df):
+            # IMPORTANT: Cache the conversion to prevent computation on every rerun
+            return df.to_csv(index = 0).encode('utf-8')
+        
+        csv_syn = convert_df(df_syn)
+        
+        st.download_button(label = "Download Synthetic Data as CSV",
+                            data = csv_syn,
+                            file_name = 'df_syn.csv',
+                            mime='text/csv')
+        
+        csv_train = convert_df(df_train)
+        st.download_button(label = "Download Training Real Data as CSV",
+                            data = csv_train,
+                            file_name = 'df_train.csv',
+                            mime='text/csv')
+        
+        csv_holdout = convert_df(df_val)
+        st.download_button(label = "Download Holdout Real Data as CSV",
+                            data = csv_holdout,
+                            file_name = 'df_val.csv',
+                            mime='text/csv')
+        
+        st.caption(f"Elapsed Time: {piper.elapsed_time}")
+        
     except:
-        st.caption("Upload Real Data csv to proceed.")
+        st.caption("")

@@ -3,6 +3,7 @@ from DataSynthesizer.DataGenerator import DataGenerator
 import os
 from sdv.single_table import CTGANSynthesizer, TVAESynthesizer
 import pandas as pd
+from timer import Timer
 
 class SynPiper:
     """
@@ -58,6 +59,10 @@ class SynPiper:
         Returns:
             None
         """
+
+        timer = Timer()
+        timer.start()
+
         if self.synthesizer_name == "ctgan":
             self.generate_sdv(num_tuples_to_generate=num_tuples_to_generate)
 
@@ -69,6 +74,8 @@ class SynPiper:
 
         else:
             raise ValueError("Unknown Synthesizer Name found.")
+        
+        self.elapsed_time = timer.stop()
     
     # CTGAN and TVAE (belonging to Synthetic Data Vault (sdv) library)
     def generate_sdv(self, num_tuples_to_generate):
@@ -92,7 +99,7 @@ class SynPiper:
         synthetic_data = synthesizer.sample(num_tuples_to_generate)
         
         # Saves the Synthetic Data csv file to the designated filepath
-        synthetic_data.to_csv(self.synthetic_filepath)
+        synthetic_data.to_csv(index = 0, path_or_buf= self.synthetic_filepath)
         print("Successfully saved the synthetic dataset to", self.synthetic_filepath)
 
         # Store the synthetic samples as an attribute
@@ -100,6 +107,7 @@ class SynPiper:
 
     # DataSynthesizer's Library
     def generate_dpsynthesizer(self, num_tuples_to_generate):
+        
         print("Processing input data...")
         # Processing input data
         description_file = self.processor.process()
