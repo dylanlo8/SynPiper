@@ -28,9 +28,11 @@ if __name__ == '__main__':
         st.subheader("Preview of Dataset")
         st.dataframe(uploaded_data.head())
 
+        target = st.selectbox(label = "Target Column", options = uploaded_data.columns)
+
         # Train - Holdout set Split
         df_train, df_val = train_val_split(uploaded_data, 
-                                           uploaded_data.columns[-1], 
+                                           target, 
                                            ratio = 0.7) 
         df_train.to_csv(path_or_buf = path_of_df_train, index = False)
         df_val.to_csv(path_or_buf = path_of_df_val, index = False)
@@ -39,12 +41,13 @@ if __name__ == '__main__':
         avail_cols = df_train.columns
 
         cat_cols = st.multiselect(label="Categorical Features", 
-                                    options=avail_cols)
+                                options=avail_cols)
 
         num_cols = st.multiselect(
             label = "Numerical Features",
             options=[col for col in avail_cols if col not in cat_cols]
         )
+
 
         # Saves the list of categorical and numerical data into st session state
         st.session_state['cat_cols'] = cat_cols
@@ -94,15 +97,15 @@ if __name__ == '__main__':
             )
             network_expander = st.expander("See bayesian network parameter configuration")
             network_expander.write("""
-                Advised number of networks to pick: 3 \n
-                Picking a high number of networks could lead to a more overfitted synthetic data generator.
+                Advised number of networks to pick: 2 \n
+                Picking a high number of networks works better for larger dimensionality datasets.
             """)
 
             epsilon = st.slider(label="Epsilon Value", min_value= 0.0, max_value= 3.0)
             epsilon_expander = st.expander("See epsilon parameter configuration")
             epsilon_expander.write("""
                 To turn off Differential Privacy, pick 0. \n
-                For more privatised synthetic data, pick a small epsilon value like 0.2. \n
+                For more privatised synthetic data, pick a small epsilon value like 0.5. \n
                 For less privatised synthetic data with higher fidelity, pick a larger epsilon value.
             """)
             ready_to_train = True
@@ -162,7 +165,6 @@ if __name__ == '__main__':
             return df.to_csv(index = 0).encode('utf-8')
         
         csv_syn = convert_df(df_syn)
-        
         st.download_button(label = "Download Synthetic Data as CSV",
                             data = csv_syn,
                             file_name = 'df_syn.csv',

@@ -4,7 +4,6 @@ import pandas as pd
 import os
 import streamlit as st
 from synthetic_evaluation import *
-from timer import Timer
 """
     These are runnable functions that will be executed when all 
     required parameters have been collected. 

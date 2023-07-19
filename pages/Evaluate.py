@@ -66,9 +66,6 @@ try:
     st.metric(label = "Dataset Mutual Information Score",
             value = f"{mi_score}%")
 
-    st.metric(label = "Proportion of Relationships with negligible MI difference",
-            value = f"{n_pass_threshold}%")
-
     st.pyplot(fig)
 
 
@@ -83,9 +80,6 @@ try:
     # Plot individual distributions for each column
     for col in df_train.columns:
         st.plotly_chart(plot_real_synthetic(df_train, df_syn, col))
-
-    st.caption("Please upload both datasets to proceed")
-
 
 except ValueError:
     st.text("Upload both datafiles to proceed")
