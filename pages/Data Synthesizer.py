@@ -27,13 +27,19 @@ if __name__ == '__main__':
         
         st.subheader("Preview of Dataset")
         st.dataframe(uploaded_data.head())
-
-        target = st.selectbox(label = "Target Column", options = uploaded_data.columns)
+        
+        target = st.selectbox(label = "Target Column", 
+                              options = uploaded_data.columns)
+        target_expander = st.expander("No target column?")
+        target_expander.write("""
+                Pick any categorical column as the target column if there is no target column.
+        """)
 
         # Train - Holdout set Split
         df_train, df_val = train_val_split(uploaded_data, 
                                            target, 
                                            ratio = 0.7) 
+        
         df_train.to_csv(path_or_buf = path_of_df_train, index = False)
         df_val.to_csv(path_or_buf = path_of_df_val, index = False)
 
@@ -133,6 +139,7 @@ if __name__ == '__main__':
             pass
         
         ready_to_download = False
+        elapsed_time = "..."
 
         if ready_to_train:
             st.subheader("Training of Synthesizer")
@@ -150,12 +157,15 @@ if __name__ == '__main__':
 
             with col2: # Train Button 
                 if st.button(label = "Generate"): 
+                    elapsed_time = "Model is running..."
+
                     piper = SynPiper(
                         path_of_df_train, 
                         param_dict = params_required, 
                         synthesizer_name = synthesizer_name, 
                         synthetic_filepath=synthetic_filepath)
                     piper.generate(num_tuples_to_generate = n_rows_input)
+                    elapsed_time = piper.elapsed_time
 
         df_syn = pd.read_csv(synthetic_filepath)
 
@@ -181,8 +191,7 @@ if __name__ == '__main__':
                             data = csv_holdout,
                             file_name = 'df_val.csv',
                             mime='text/csv')
-        
-        st.caption(f"Elapsed Time: {piper.elapsed_time}")
-        
+
+        st.text(f"Elapsed Time: {elapsed_time}")        
     except:
         st.caption("")
